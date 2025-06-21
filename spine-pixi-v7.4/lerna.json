@@ -1,0 +1,9 @@
+{
+    "version": "4.0.4",
+    "command": {
+        "publish": {
+            "graphType": "all"
+        }
+    },
+    "$schema": "node_modules/lerna/schemas/lerna-schema.json"
+}

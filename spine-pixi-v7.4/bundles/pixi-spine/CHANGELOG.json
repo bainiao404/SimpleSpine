@@ -1,0 +1,131 @@
+{
+  "name": "pixi-spine",
+  "entries": [
+    {
+      "version": "3.1.2",
+      "tag": "pixi-spine_v3.1.2",
+      "date": "Tue, 10 Jan 2023 14:16:39 GMT",
+      "comments": {}
+    },
+    {
+      "version": "3.1.1",
+      "tag": "pixi-spine_v3.1.1",
+      "date": "Mon, 09 Jan 2023 16:32:23 GMT",
+      "comments": {}
+    },
+    {
+      "version": "3.1.0",
+      "tag": "pixi-spine_v3.1.0",
+      "date": "Wed, 03 Aug 2022 16:56:05 GMT",
+      "comments": {}
+    },
+    {
+      "version": "3.0.16",
+      "tag": "pixi-spine_v3.0.16",
+      "date": "Tue, 28 Jun 2022 15:02:18 GMT",
+      "comments": {}
+    },
+    {
+      "version": "3.0.15",
+      "tag": "pixi-spine_v3.0.15",
+      "date": "Fri, 03 Jun 2022 12:31:22 GMT",
+      "comments": {}
+    },
+    {
+      "version": "3.0.14",
+      "tag": "pixi-spine_v3.0.14",
+      "date": "Thu, 02 Jun 2022 11:59:23 GMT",
+      "comments": {}
+    },
+    {
+      "version": "3.0.13",
+      "tag": "pixi-spine_v3.0.13",
+      "date": "Mon, 13 Sep 2021 16:46:08 GMT",
+      "comments": {}
+    },
+    {
+      "version": "3.0.12",
+      "tag": "pixi-spine_v3.0.12",
+      "date": "Fri, 10 Sep 2021 14:24:08 GMT",
+      "comments": {}
+    },
+    {
+      "version": "3.0.11",
+      "tag": "pixi-spine_v3.0.11",
+      "date": "Tue, 31 Aug 2021 18:14:50 GMT",
+      "comments": {}
+    },
+    {
+      "version": "3.0.10",
+      "tag": "pixi-spine_v3.0.10",
+      "date": "Tue, 31 Aug 2021 18:09:34 GMT",
+      "comments": {}
+    },
+    {
+      "version": "3.0.9",
+      "tag": "pixi-spine_v3.0.9",
+      "date": "Tue, 24 Aug 2021 16:27:55 GMT",
+      "comments": {}
+    },
+    {
+      "version": "3.0.8",
+      "tag": "pixi-spine_v3.0.8",
+      "date": "Thu, 05 Aug 2021 12:02:37 GMT",
+      "comments": {}
+    },
+    {
+      "version": "3.0.7",
+      "tag": "pixi-spine_v3.0.7",
+      "date": "Tue, 27 Jul 2021 14:12:17 GMT",
+      "comments": {}
+    },
+    {
+      "version": "3.0.6",
+      "tag": "pixi-spine_v3.0.6",
+      "date": "Tue, 27 Jul 2021 10:37:28 GMT",
+      "comments": {}
+    },
+    {
+      "version": "3.0.5",
+      "tag": "pixi-spine_v3.0.5",
+      "date": "Tue, 13 Jul 2021 13:56:23 GMT",
+      "comments": {}
+    },
+    {
+      "version": "3.0.4",
+      "tag": "pixi-spine_v3.0.4",
+      "date": "Mon, 07 Jun 2021 21:56:43 GMT",
+      "comments": {}
+    },
+    {
+      "version": "3.0.3",
+      "tag": "pixi-spine_v3.0.3",
+      "date": "Wed, 02 Jun 2021 17:04:23 GMT",
+      "comments": {
+        "none": [
+          {
+            "comment": "Derpfix IntSet not found"
+          }
+        ]
+      }
+    },
+    {
+      "version": "3.0.2",
+      "tag": "pixi-spine_v3.0.2",
+      "date": "Wed, 02 Jun 2021 16:49:17 GMT",
+      "comments": {
+        "none": [
+          {
+            "comment": "Fix \"Cannot redefine property: Spine\" error by removing re-export from main pixi-spine bundle. Improved interfaces should work for people who use it a bit, everyone else should either import `@pixi-spine/runtime-3.8`, OR swap `pixi-spine` to `@pixi-spine/all-3.8` bundle (that's easier)."
+          }
+        ]
+      }
+    },
+    {
+      "version": "3.0.1",
+      "tag": "pixi-spine_v3.0.1",
+      "date": "Thu, 29 Apr 2021 14:01:08 GMT",
+      "comments": {}
+    }
+  ]
+}

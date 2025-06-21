@@ -1,0 +1,50 @@
+# Sublime Text files
+*.sublime*
+*.*~*.TMP
+
+# OS temp files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Tool temp files
+npm-debug.log
+.pnpm-debug.log
+*.sw*
+*~
+\#*#
+yarn.lock
+
+# project ignores
+!.gitkeep
+node_modules
+gh-pages
+build-es6
+.idea
+
+# Rush temporary files
+common/config/rush/pnpm-lock.yaml
+common/deploy/
+common/scripts/
+common/temp/
+common/autoinstallers/*/.npmrc
+**/.rush/temp/
+**/*.build.log
+compile
+
+# packages ignore
+lib
+dist
+bundles/*/index.d.ts
+packages/*/index.d.ts
+
+# ignore the npmrc
+.npmrc
+.nx
+
+# lerna logs
+lerna-debug.log
+
+
+#local bundles for testing
+**/*.tgz

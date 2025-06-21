@@ -1,0 +1,45 @@
+{
+  "name": "pixi-spine-parent",
+  "private": true,
+  "description": "Parent package for pixi-spine",
+  "scripts": {
+    "clean": "lerna run clean",
+    "build": "lerna run build",
+    "build:types": "lerna run build:types",
+    "build:rollup": "lerna run build:rollup",
+    "lint": "lerna run lint",
+    "lint:fix": "lerna run lint:fix",
+    "prepublishOnly": "lerna run build",
+    "lernaPublish": "lerna publish --no-private",
+    "lernaPublish:fromPackage": "lerna publish from-package --no-private",
+    "createTestBundles": "lerna run testBundle"
+  },
+  "workspaces": [
+    "packages/*",
+    "bundles/*",
+    "tools/*"
+  ],
+  "devDependencies": {
+    "@esotericsoftware/spine-pixi-v7": "^4.2.83",
+    "@microsoft/api-extractor": "^7.47.9",
+    "@pixi/eslint-config": "^4.0.1",
+    "@pixi/rollup-plugin-rename-node-modules": "^2.0.0",
+    "@rollup/plugin-commonjs": "^24.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.1",
+    "@rollup/plugin-replace": "^5.0.2",
+    "eslint": "^8.3.1",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "install": "^0.13.0",
+    "lerna": "^8.1.8",
+    "npm": "^8.0.0",
+    "npm-run-all": "^4.1.5",
+    "prepend": "=1.0.2",
+    "rimraf": "3.0.2",
+    "rollup": "^3.9.1",
+    "rollup-plugin-esbuild": "^5.0.0",
+    "rollup-plugin-string": "^3.0.0",
+    "typescript": "5.4.2"
+  },
+  "license": "SEE SPINE-LICENSE"
+}

@@ -1,0 +1,33 @@
+{
+    "targetDefaults": {
+        "build": {
+            "dependsOn": ["^build"],
+            "outputs": [
+                "{projectRoot}/lib",
+                "{projectRoot}/dist",
+                "{projectRoot}/types.d.ts"
+            ],
+            "cache": true
+        },
+        "build:types": {
+            "dependsOn": ["^build:types"],
+            "outputs": ["{projectRoot}/types.d.ts"],
+            "cache": true
+        },
+        "build:rollup": {
+            "dependsOn": ["^build:rollup"],
+            "outputs": ["{projectRoot}/lib", "{projectRoot}/dist"],
+            "cache": true
+        },
+        "test": {
+            "dependsOn": ["build"],
+            "cache": true
+        },
+        "lint": {
+            "cache": true
+        },
+        "lint:fix": {
+            "cache": true
+        }
+    }
+}

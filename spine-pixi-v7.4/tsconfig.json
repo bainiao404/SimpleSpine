@@ -1,0 +1,36 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "allowJs": true,
+        "removeComments": false,
+        "strict": true,
+        "noImplicitAny": false,
+        "noUnusedLocals": true,
+        "noUnusedParameters": false,
+        "noImplicitReturns": true,
+        "strictNullChecks": false,
+        "esModuleInterop": true,
+        "moduleResolution": "node",
+        "baseUrl": "./",
+        "outDir": "./compile",
+        "declaration": false,
+        "declarationMap": false,
+        "allowSyntheticDefaultImports": true,
+        "lib": [
+            "es6",
+            "dom"
+        ],
+    },
+    "exclude": [
+        "node_modules",
+        "**/dist/**",
+        "**/lib/**",
+        "**/test/**",
+        "**/scripts/**",
+        "**/types/**",
+        "bundles/**/*.d.ts",
+        "rollup.config.js",
+        "*.vert",
+        "*.frag"
+    ]
+}
