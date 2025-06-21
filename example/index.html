@@ -1,0 +1,43 @@
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>spine-pixi</title>
+</head>
+<script src="src/pixi7.4.2.min.js"></script>
+<script src="src/pixi-spine.js"></script>
+<script src="src/SimpleSpine.js"></script>
+<body>
+    <script>
+        var app = new PIXI.Application({
+            width: window.innerWidth,
+            height: window.innerHeight,
+            resolution: window.devicePixelRatio || 1,
+            autoDensity: true,
+            resizeTo: window,
+            backgroundColor: 0x2c3e50,
+            hello: true,
+        });
+        document.body.appendChild(app.view);
+        async function newSpine(src) {
+            let spineData = await SimpleSpine.load(src);
+            //自动判断预乘（如果你不知道纹理是否为预乘）
+            //spineData.setPremultiplied();
+            //设置为预乘图片
+            //spineData.setPremultiplied(true);
+            let mySpine = SimpleSpine.spine(spineData);
+            //设置debug
+            //mySpine.setDebug();
+            let animation = mySpine.spine;
+            animation.x = app.screen.width/2
+            animation.y = app.screen.height/2
+            animation.scale.set(0.5)
+            app.stage.addChild(animation);
+            //设置动画
+            animation.state.setAnimation(0, 'run', true);
+        }
+        newSpine('assets/spine/spineboy.skel')
+    </script>
+</body>
+
+</html>
