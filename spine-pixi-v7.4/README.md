@@ -179,3 +179,18 @@ If you have enough rights to publish this monorepo, you can publish by running `
 This is so that it runs with the internal npm v8 since npm v9 doesn't play nice with Lerna.
 
 If for some reason your publish failed, use `npm run lernaPublish:fromPackage` to try to force a publish without creating a new version
+
+##### When building, there are errors related to @types/css-font-loading-module. Please try
+
+*# Try to install the latest version (if it exists)*
+
+```
+npm install @types/css-font-loading-module@latest --save-dev 
+```
+
+*# If there is no updated version, directly remove the conflicting type package*
+
+```
+npm uninstall @types/css-font-loading-module --save-dev
+```
+
