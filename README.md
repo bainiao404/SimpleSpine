@@ -6,12 +6,15 @@
 
 引入必要文件：
 
+```html
 <script src="src/pixi7.4.2.min.js"></script>
 <script src="src/pixi-spine.js"></script>
 <script src="src/SimpleSpine.js"></script>
+```
 
 加载spine:
 
+```html
 <script>
     var app = new PIXI.Application({
         width: window.innerWidth,
@@ -39,3 +42,5 @@
     }
     newSpine('assets/spine/spineboy.skel')
 </script>
+```
+
