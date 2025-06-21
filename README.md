@@ -1,6 +1,6 @@
 # SimpleSpine
 
-基于PixiJS v7、Spine-Pixi 的 Spine整合，支持的spine版本：2.1、3.4、3.5、3.6、3.7、3.8、4.0、4.1、4.2
+基于PixiJS v7、Spine-Pixi 的 Spine整合，支持的spine版本：2.1【不完全】、3.4、3.5、3.6、3.7、3.8、4.0、4.1、4.2
 
 # 基本使用
 
