@@ -1,297 +1,330 @@
 var SimpleSpine = {};
-SimpleSpine.load  = async function(src, options = {}) {
-    // 获取资源路径配置 
-    const srcs = this.getSpineSrc(src,  options);
-    const skelFileType = srcs.type  === "skel" ? "arraybuffer" : "text";
- 
+SimpleSpine.load = async function (src, options = {}) {
+    // 获取资源路径配置
+    const srcs = this.getSpineSrc(src, options);
+    const skelFileType = srcs.type === "skel" ? "arraybuffer" : "text";
+
     try {
-        // 并行加载骨架和atlas文件 
-        const [skelRes, atlasRes] = await Promise.all([ 
-            this.loadFile(srcs.path[0],skelFileType),
-            this.loadFile(srcs.atlasPath  || srcs.path[1], 'text')
+        // 并行加载骨架和atlas文件
+        const [skelRes, atlasRes] = await Promise.all([
+            this.loadFile(srcs.path[0], skelFileType),
+            this.loadFile(srcs.atlasPath || srcs.path[1], "text"),
         ]);
- 
-        // 准备纹理数据 
-        const textureData = this.prepareTextureData( 
-            atlasRes.data,  
-            srcs.texturePath  || srcs.path[2] 
+
+        // 准备纹理数据
+        const textureData = this.prepareTextureData(
+            atlasRes.data,
+            srcs.texturePath || srcs.path[2]
         );
- 
-        // 检测Spine版本 
-        const version = this.detectSpineVersion({ 
-            data: skelRes.data, 
-            type: srcs.type, 
-            fallbackVersion: srcs.version  
+
+        // 检测Spine版本
+        const version = this.detectSpineVersion({
+            data: skelRes.data,
+            type: srcs.type,
+            fallbackVersion: srcs.version,
         });
         if (!version) throw new Error("未知版本号或者非spine文件");
- 
-        // 处理Spine数据 
-        const processedData = await this.processSpineData({ 
+
+        // 处理Spine数据
+        const processedData = await this.processSpineData({
             version,
-            skelData: skelRes.data, 
-            atlasData: atlasRes.data, 
+            skelData: skelRes.data,
+            atlasData: atlasRes.data,
             textureData,
-            fileType: srcs.type  
+            fileType: srcs.type,
         });
- 
+
         return {
             ...processedData,
-            info: srcs 
+            info: srcs,
         };
     } catch (error) {
-        console.error(' 加载Spine资源失败:', error);
+        console.error(" 加载Spine资源失败:", error);
         throw error;
     }
 };
-SimpleSpine.spine = function(spineData){
-    let spine = null
-    let debug = null
-    if(spineData.version == 42){
-        spine = new PIXI.spine.spine42.Spine({skeletonData:spineData.spine});
-        debug = new PIXI.spine.spine42.SpineDebugRenderer()
-    }else{
+SimpleSpine.spine = function (spineData) {
+    let spine = null;
+    let debug = null;
+    if (spineData.version == 42) {
+        spine = new PIXI.spine.spine42.Spine({ skeletonData: spineData.spine });
+        debug = new PIXI.spine.spine42.SpineDebugRenderer();
+    } else {
         spine = new PIXI.spine.Spine(spineData.spine);
-        debug = new PIXI.spine.SpineDebugRenderer()
+        debug = new PIXI.spine.SpineDebugRenderer();
     }
     return {
         spine,
         debug,
-        setDebug:function () {
-            this.spine.debug = this.debug
-        }
-    }
-}
-SimpleSpine.getSpineSrc  = function(src, options = {}) {
-    // 参数校验 
+        setDebug: function () {
+            this.spine.debug = this.debug;
+        },
+    };
+};
+SimpleSpine.getSpineSrc = function (src, options = {}) {
+    // 参数校验
     if (!src) throw new Error("地址不存在");
- 
-    // 处理字符串类型路径 
+
+    // 处理字符串类型路径
     if (typeof src === "string") {
-        if (!src.endsWith(".skel")  && !src.endsWith(".json"))  {
+        if (!src.endsWith(".skel") && !src.endsWith(".json")) {
             throw new Error(`匹配地址失败: ${src}`);
         }
- 
+
         return {
-            type: src.slice(-5)  === ".skel" ? "skel" : "json",
+            type: src.slice(-5) === ".skel" ? "skel" : "json",
             path: [
                 src,
-                options.atlasPath  || src.slice(0,  -5) + ".atlas",
-                options.texturePath  || this.getFileDirectory(src) 
+                options.atlasPath || src.slice(0, -5) + ".atlas",
+                options.texturePath || this.getFileDirectory(src),
             ],
-            atlasPath: options.atlasPath,   // 自定义atlas路径 
-            texturePath: options.texturePath   // 自定义纹理路径 
+            atlasPath: options.atlasPath, // 自定义atlas路径
+            texturePath: options.texturePath, // 自定义纹理路径
         };
     }
- 
-    // 处理对象类型配置 
+
+    // 处理对象类型配置
     if (typeof src === "object") {
-        // 验证必要字段 
-        if (!src.type  || !src.path)  {
+        // 验证必要字段
+        if (!src.type || !src.path) {
             throw new Error("解析地址格式错误：缺少type或path字段");
         }
- 
-        // 确保path数组长度足够 
-        if (src.path.length  < 2) {
+
+        // 确保path数组长度足够
+        if (src.path.length < 2) {
             throw new Error("解析地址格式错误：path数组至少需要包含骨架和atlas路径");
         }
- 
+
         return {
             ...src,
-            atlasPath: options.atlasPath  || src.atlasPath  || src.path[1], 
-            texturePath: options.texturePath  || src.texturePath  || (src.path[2]  || this.getFileDirectory(src.path[0])) 
+            atlasPath: options.atlasPath || src.atlasPath || src.path[1],
+            texturePath:
+                options.texturePath ||
+                src.texturePath ||
+                src.path[2] ||
+                this.getFileDirectory(src.path[0]),
         };
     }
- 
+
     throw new Error("不支持的src类型");
 };
- 
-SimpleSpine.prepareTextureData  = function(atlasData, textureBasePath) {
-    const atlasInfo = this.getTextureAtlasInfo(atlasData); 
-    return atlasInfo.map(item  => ({
-        name: item.name, 
-        src: textureBasePath + item.name  
+
+SimpleSpine.prepareTextureData = function (atlasData, textureBasePath) {
+    const atlasInfo = this.getTextureAtlasInfo(atlasData);
+    return atlasInfo.map((item) => ({
+        name: item.name,
+        src: textureBasePath + item.name,
     }));
 };
 
-SimpleSpine.detectSpineVersion  = function({ data, type, fallbackVersion }) {
+SimpleSpine.detectSpineVersion = function ({ data, type, fallbackVersion }) {
     let versionStr = "";
     if (type === "skel") {
-        versionStr = this.uint8ArrayToString(new  Uint8Array(data).slice(0, 40));
+        versionStr = this.uint8ArrayToString(new Uint8Array(data).slice(0, 40));
     } else {
         try {
-            versionStr = JSON.parse(data)
+            versionStr = JSON.parse(data);
         } catch {}
     }
-    return this.isVersion(versionStr)  || fallbackVersion;
+    return this.isVersion(versionStr) || fallbackVersion;
 };
 
 /**
  * 基于 XMLHttpRequest 加载文件
- * @param {string} url - 资源地址 
- * @param {'text'|'json'|'arraybuffer'|'blob'} responseType - 响应类型 
+ * @param {string} url - 资源地址
+ * @param {'text'|'json'|'arraybuffer'|'blob'} responseType - 响应类型
  * @param {object} [options] - 高级选项
  * @param {function} [options.onProgress] - 进度回调(0-100)
  */
-SimpleSpine.loadFile  = function(url, responseType = 'text', options = {}) {
+SimpleSpine.loadFile = function (url, responseType = "text", options = {}) {
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        xhr.open('GET',  url, true);
-        xhr.responseType  = responseType; // 直接使用现代浏览器支持的响应类型 
-        xhr.onload  = () => {
-            if (xhr.status  === 200) {
+        xhr.open("GET", url, true);
+        xhr.responseType = responseType; // 直接使用现代浏览器支持的响应类型
+        xhr.onload = () => {
+            if (xhr.status === 200 || xhr.status === 0) {
                 resolve({
-                    data: xhr.response, 
-                    status: xhr.status, 
+                    data: xhr.response,
+                    status: xhr.status,
                     headers: new Map(
-                        xhr.getAllResponseHeaders() 
+                        xhr
+                            .getAllResponseHeaders()
                             .trim()
-                            .split('\n')
-                            .map(line => line.split(':  '))
-                    )
+                            .split("\n")
+                            .map((line) => line.split(":  "))
+                    ),
                 });
             } else {
-                reject(new Error(`HTTP ${xhr.status}`)); 
+                reject(new Error(`HTTP ${xhr.status}`));
             }
         };
- 
+
         // 进度事件（需服务端返回Content-Length）
-        if (typeof options.onProgress  === 'function') {
-            xhr.addEventListener('progress',  (e) => {
-                if (e.lengthComputable)  {
-                    options.onProgress(Math.round((e.loaded  / e.total)  * 100));
+        if (typeof options.onProgress === "function") {
+            xhr.addEventListener("progress", (e) => {
+                if (e.lengthComputable) {
+                    options.onProgress(Math.round((e.loaded / e.total) * 100));
                 }
             });
         }
- 
-        xhr.onerror  = () => reject(new Error('Network error'));
-        xhr.ontimeout  = () => reject(new Error(`Timeout after ${xhr.timeout}ms`)); 
-        xhr.send(); 
+
+        xhr.onerror = () => reject(new Error("Network error"));
+        xhr.ontimeout = () => reject(new Error(`Timeout after ${xhr.timeout}ms`));
+        xhr.send();
     });
 };
 
-SimpleSpine.processSpineData  = async function( {version, skelData, atlasData, textureData,textureType='url'} ) {
-    let fileType = "skel"
+SimpleSpine.processSpineData = async function ({
+    version,
+    skelData,
+    atlasData,
+    textureData,
+    textureType = "url",
+}) {
+    let fileType = "skel";
     const versionMap = {
-        "20": { target: "38", handler: "readSkeletonData21" },
-        "21": { target: "38", handler: "readSkeletonData21" },
-        "34": { target: "38", handler: "readSkeletonData34And35" },
-        "35": { target: "38", handler: "readSkeletonData34And35" },
-        "36": { target: "38", handler: "readSkeletonData36And37" },
-        "37": { target: "38", handler: "readSkeletonData36And37" },
-        "38": { target: "38", handler: null },
-        "40": { target: "40", handler: null },
-        "41": { target: "41", handler: null },
-        "42": { target: "42", handler: null }
+        20: { target: "38", handler: "readSkeletonData21" },
+        21: { target: "38", handler: "readSkeletonData21" },
+        34: { target: "38", handler: "readSkeletonData34And35" },
+        35: { target: "38", handler: "readSkeletonData34And35" },
+        36: { target: "38", handler: "readSkeletonData36And37" },
+        37: { target: "38", handler: "readSkeletonData36And37" },
+        38: { target: "38", handler: null },
+        40: { target: "40", handler: null },
+        41: { target: "41", handler: null },
+        42: { target: "42", handler: null },
     };
     const config = versionMap[version];
     if (!config) throw new Error(`不受支持的spine版本: ${version}`);
     let skeletonData = skelData;
-    let originalSpine = null
-    if (config.handler){
-        if(checkType(skeletonData)  === 'skel'){
+    let originalSpine = null;
+    if (config.handler) {
+        if (checkType(skeletonData) === "skel") {
             skeletonData = this.skelToJson[config.handler](skelData);
         }
-        if(checkType(skeletonData) == "json"){
-            skeletonData = JSON.parse(skeletonData)
+        if (checkType(skeletonData) == "json") {
+            skeletonData = JSON.parse(skeletonData);
         }
-        if(checkType(skeletonData) == "obj"){
-            originalSpine = skeletonData
+        if (checkType(skeletonData) == "obj") {
+            originalSpine = skeletonData;
             skeletonData = this.skelToJson.spine36To38(skeletonData);
         }
     }
-    fileType = checkType(skeletonData)
+    fileType = checkType(skeletonData);
     function checkType(value) {
-        if (value instanceof ArrayBuffer || 
-            Object.prototype.toString.call(value)  === '[object ArrayBuffer]') {
-          return 'skel';
+        if (
+            value instanceof ArrayBuffer ||
+            Object.prototype.toString.call(value) === "[object ArrayBuffer]"
+        ) {
+            return "skel";
         }
-        if (typeof value === 'string' || value instanceof String) {
-          return 'json';
+        if (typeof value === "string" || value instanceof String) {
+            return "json";
         }
-        if (Object.prototype.toString.call(value)  === '[object Object]' && 
-            (!value.constructor  || value.constructor  === Object)) {
-          return 'obj';
+        if (
+            Object.prototype.toString.call(value) === "[object Object]" &&
+            (!value.constructor || value.constructor === Object)
+        ) {
+            return "obj";
         }
-        return 'Other';
+        return "Other";
     }
     return this.readSpineSpineData({
-        version:config.target,
-        type:fileType,
+        version: config.target,
+        type: fileType,
         skeletonData,
         atlasData,
-        textureData:textureData,
+        textureData: textureData,
         textureType,
         originalSpine,
     });
 };
 SimpleSpine.isPremultiplied = function (baseTexture) {
-    if(Array.isArray(baseTexture)){baseTexture = baseTexture[0]}
-    if(baseTexture.texture){baseTexture = baseTexture.texture}
-    if(baseTexture.resource.source){
-        const canvas = document.createElement('canvas'); 
-        const ctx = canvas.getContext('2d',{ premultiplyAlpha: 'none' }); 
-        canvas.width  = baseTexture.width; 
-        canvas.height  = baseTexture.height; 
-        ctx.drawImage(baseTexture.resource.source,  0, 0);
-    
-        const imageData = ctx.getImageData(0,  0, canvas.width,  canvas.height); 
-        const data = imageData.data; 
-
-        return isPremultipliedAlpha(data,tolerance = 20)        
-    }else{
-        return isPremultipliedAlpha(baseTexture.resource.data,tolerance = 2)
+    if (Array.isArray(baseTexture)) {
+        baseTexture = baseTexture[0];
     }
+    if (baseTexture.texture) {
+        baseTexture = baseTexture.texture;
+    }
+    if (baseTexture.resource.source) {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d", { premultiplyAlpha: "none" });
+        canvas.width = baseTexture.width;
+        canvas.height = baseTexture.height;
+        ctx.drawImage(baseTexture.resource.source, 0, 0);
 
-    function isPremultipliedAlpha(imageData,tolerance) {
-        for (let i = 0; i < imageData.length; i += 4) {
-            const red = imageData[i];
-            const green = imageData[i + 1];
-            const blue = imageData[i + 2];
-            const alpha = imageData[i + 3] + tolerance;
-    
-            if (red > alpha || green > alpha || blue > alpha) {
-                return false; // 如果有任何一个像素的RGB值大于Alpha值，则不是预乘纹理
-            }
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+
+        return this.isPremultipliedAlpha(data, 20);
+    } else {
+        return this.isPremultipliedAlpha(baseTexture.resource.data, 20);
+    }
+};
+/**
+ * 判断rgba数组是否为预乘
+ * @param {*} imageData
+ * @param {*} tolerance
+ * @returns
+ */
+SimpleSpine.isPremultipliedAlpha = function (imageData, tolerance = 10) {
+    for (let i = 0; i < imageData.length; i += 4) {
+        const red = imageData[i];
+        const green = imageData[i + 1];
+        const blue = imageData[i + 2];
+        const alpha = imageData[i + 3] + tolerance;
+
+        if (red > alpha || green > alpha || blue > alpha) {
+            return false; // 如果有任何一个像素的RGB值大于Alpha值，则不是预乘纹理
         }
-        return true; // 所有像素的RGB值都小于等于Alpha值，是预乘纹理
     }
-}
-SimpleSpine.premultipliedToStraight = function(rgbaArray) {
+    return true; // 所有像素的RGB值都小于等于Alpha值，是预乘纹理
+};
+SimpleSpine.premultipliedToStraight = function (rgbaArray) {
     const result = new Uint8Array(rgbaArray.length);
     for (let i = 0; i < rgbaArray.length; i += 4) {
         const alpha = rgbaArray[i + 3] / 255;
         if (alpha > 0) {
             result[i] = Math.min(255, Math.round(rgbaArray[i] / alpha)); // R
-            result[i + 1] = Math.min(
-                255,
-                Math.round(rgbaArray[i + 1] / alpha)
-            ); // G
-            result[i + 2] = Math.min(
-                255,
-                Math.round(rgbaArray[i + 2] / alpha)
-            ); // B
+            result[i + 1] = Math.min(255, Math.round(rgbaArray[i + 1] / alpha)); // G
+            result[i + 2] = Math.min(255, Math.round(rgbaArray[i + 2] / alpha)); // B
         } else {
             result[i] = result[i + 1] = result[i + 2] = 0; // Alpha=0时归零
         }
         result[i + 3] = rgbaArray[i + 3]; // 保留原始Alpha
     }
     return result;
-}
-SimpleSpine.getTextureAtlasInfo  = function(atlasData){
+};
+SimpleSpine.getTextureAtlasInfo = function (atlasData) {
     let line = atlasData.split(/\r\n|\r|\n/);
-    let list = []
-    for(var i=0;i<line.length;i++){
-        if(line[i] && line[i].indexOf(".png") != -1){
+    let list = [];
+    for (var i = 0; i < line.length; i++) {
+        if (line[i] && line[i].indexOf(".png") != -1) {
             list.push({
-                name:line[i],
-                width:line[i+1].replace("size: ","").replace("size:","").split(",")[0],
-                height:line[i+1].replace("size: ","").replace("size:","").split(",")[1]
-            })
+                name: line[i],
+                width: line[i + 1].replace("size: ", "").replace("size:", "").split(",")[0],
+                height: line[i + 1].replace("size: ", "").replace("size:", "").split(",")[1],
+            });
         }
     }
-    return list
-}
-SimpleSpine.readSpineSpineData  = function(config) {
+    return list;
+};
+SimpleSpine.resizeRgbaBuffer = function (buffer, oldW, oldH, newW, newH) {
+    const newBuffer = new Uint8Array(newW * newH * 4);
+    // 使用双线性插值算法重采样（示例伪代码）
+    for (let y = 0; y < newH; y++) {
+        for (let x = 0; x < newW; x++) {
+            const srcX = Math.floor(x * (oldW / newW));
+            const srcY = Math.floor(y * (oldH / newH));
+            const srcIdx = (srcY * oldW + srcX) * 4;
+            const dstIdx = (y * newW + x) * 4;
+            // RGBA通道复制
+            newBuffer.set(buffer.subarray(srcIdx, srcIdx + 4), dstIdx);
+        }
+    }
+    return newBuffer;
+};
+SimpleSpine.readSpineSpineData = function (config) {
     const {
         version,
         type,
@@ -299,175 +332,247 @@ SimpleSpine.readSpineSpineData  = function(config) {
         atlasData,
         textureData,
         textureType = "url",
-        originalSpine
+        originalSpine,
     } = config;
- 
+    //参数归一化
+    if (!Array.isArray(textureData)) {
+        textureData = [textureData];
+    }
+    textureData.forEach((e) => {
+        if (e.name.indexOf(".") == -1) {
+            e.name += ".png";
+        }
+    });
     const t = this;
-    console.log(version)
-    const spineSdk = PIXI.spine[`spine${version}`]; 
-    
+    console.log(version);
+    const spineSdk = PIXI.spine[`spine${version}`];
     return new Promise(async (resolve, reject) => {
-        let spineAtlasInfo = null
+        let spineAtlasInfo = null;
         let spineResult = {
-                spine: null,
-                atlas: null,
-                texture: [],
-                originalSpine,
-                version 
+            spine: null,
+            atlas: null,
+            texture: [],
+            originalSpine,
+            version,
         };
         try {
-            // 1. 处理纹理图集 
+            // 1. 处理纹理图集
             spineAtlasInfo = t.getTextureAtlasInfo(atlasData);
-             
-            const spineAtlas = version < 42
-                ? await loadLegacyAtlas() 
-                : await loadModernAtlas();
- 
-            // 2. 创建附件加载器 
-            spineResult.atlas  = new spineSdk.AtlasAttachmentLoader(spineAtlas);
- 
-            // 3. 解析骨架数据 
-            spineResult.spine  = parseSkeletonData();
- 
-            // 4. 设置预乘alpha方法 
-            spineResult.setPremultiplied  = function(isPremultiplied) {
-                if (isPremultiplied || t.isPremultiplied(this.texture))  {
-                    this.texture.forEach(texture  => {
-                        texture.alphaMode  = PIXI.ALPHA_MODES.PREMULTIPLIED_ALPHA;
+            await loadAllTexture(textureData);
+            async function loadAllTexture(textureData) {
+                let loadList = [];
+                for (var i = 0; i < textureData.length; i++) {
+                    let cTexture = textureData[i];
+                    loadList.push(loadTexture(cTexture));
+                }
+                return Promise.all(loadList);
+                function loadTexture(cTexture) {
+                    return new Promise((resolve, reject) => {
+                        const textureInfo = getTextureInfo(cTexture.name);
+                        cTexture.texture = null;
+                        let texture = null;
+
+                        switch (textureType) {
+                            case "url":
+                                texture = PIXI.BaseTexture.from(cTexture.src);
+                                if (texture.valid) {
+                                    scaleTexture();
+                                } else {
+                                    texture.on("loaded", () => {
+                                        scaleTexture();
+                                    });
+                                    texture.on("error", (error) => {
+                                        console.log(error);
+                                        reject(cTexture.src + "纹理加载失败");
+                                    });
+                                }
+                                break;
+                            case "rgbaArray":
+                                if (
+                                    cTexture.width != textureInfo.atlasInfo.width ||
+                                    cTexture.height != textureInfo.atlasInfo.height
+                                ) {
+                                    if (t.isPremultipliedAlpha(cTexture.data)) {
+                                        cTexture.data = t.premultipliedToStraight(cTexture.data);
+                                    }
+                                    cTexture.data = t.resizeRgbaBuffer(
+                                        cTexture.data,
+                                        cTexture.width,
+                                        cTexture.height,
+                                        textureInfo.atlasInfo.width,
+                                        textureInfo.atlasInfo.height
+                                    );
+                                    texture = PIXI.BaseTexture.fromBuffer(
+                                        cTexture.data,
+                                        textureInfo.atlasInfo.width,
+                                        textureInfo.atlasInfo.height
+                                    );
+                                } else {
+                                    texture = PIXI.BaseTexture.fromBuffer(
+                                        cTexture.data,
+                                        cTexture.width,
+                                        cTexture.height
+                                    );
+                                }
+                                cTexture.texture = texture;
+                                resolve();
+                                break;
+                        }
+                        function scaleTexture() {
+                            if (
+                                texture.width != textureInfo.atlasInfo.width ||
+                                texture.height != textureInfo.atlasInfo.height
+                            ) {
+                                texture.setSize(
+                                    textureInfo.atlasInfo.width,
+                                    textureInfo.atlasInfo.height
+                                );
+                            }
+                            cTexture.texture = texture;
+                            resolve();
+                        }
                     });
                 }
+            }
+
+            const spineAtlas = version < 42 ? await loadLegacyAtlas() : await loadModernAtlas();
+
+            //2.创建附件加载器
+            spineResult.atlas = new spineSdk.AtlasAttachmentLoader(spineAtlas);
+
+            //3.解析骨架数据
+            spineResult.spine = parseSkeletonData();
+
+            //4.设置预乘alpha方法
+            spineResult.setPremultiplied = function (isPremultiplied) {
+                if (isPremultiplied || t.isPremultiplied(this.texture)) {
+                    this.isPremultiplied = true;
+                    this.texture.forEach((texture) => {
+                        texture.alphaMode = PIXI.ALPHA_MODES.PREMULTIPLIED_ALPHA;
+                    });
+                } else {
+                    this.isPremultiplied = false;
+                }
             };
- 
+
             resolve(spineResult);
         } catch (error) {
-            console.error('Spine 数据加载失败:', error);
+            console.error("Spine 数据加载失败:", error);
             reject(error);
         }
- 
+
         function loadLegacyAtlas() {
             return new Promise((resolve, reject) => {
                 let loadedCount = 0;
-                const atlas = new PIXI.spine.TextureAtlas(atlasData,  async (line, callback) => {
-                    setTimeout(function(){
+                const atlas = new PIXI.spine.TextureAtlas(atlasData, async (line, callback) => {
+                    setTimeout(function () {
                         const textureInfo = getTextureInfo(line);
-                        loadTexture(textureInfo, texture => {
-                            spineResult.texture.push(texture); 
-                            loadedCount++;
-                            
-                            if (loadedCount >= spineAtlasInfo.length)  {
-                                setTimeout(() => resolve(atlas));
-                            }
-                            callback(texture);
-                        }, reject);                        
-                    })
+                        let textrue = textureInfo.textureInfo.texture;
+                        callback(textrue);
+                        loadedCount++;
+                        if (loadedCount >= spineAtlasInfo.length) {
+                            setTimeout(() => resolve(atlas));
+                        }
+                        spineResult.texture.push(textrue);
+                    });
                 });
             });
         }
- 
+
         function loadModernAtlas() {
             return new Promise((resolve, reject) => {
                 let loadedCount = 0;
                 const atlas = new spineSdk.TextureAtlas(atlasData);
-                
-                atlas.pages.forEach(page  => {
-                    const textureInfo = getTextureInfo(page.name); 
-                    loadTexture(textureInfo, texture => {
-                        spineResult.texture.push(texture); 
-                        page.setTexture(spineSdk.SpineTexture.from(texture)); 
-                        
-                        if (++loadedCount >= spineAtlasInfo.length)  {
-                            setTimeout(() => resolve(atlas));
-                        }
-                    }, reject);
+                atlas.pages.forEach((page) => {
+                    const textureInfo = getTextureInfo(page.name);
+                    loadTexture(
+                        textureInfo,
+                        (texture) => {
+                            spineResult.texture.push(texture);
+                            page.setTexture(spineSdk.SpineTexture.from(texture));
+
+                            if (++loadedCount >= spineAtlasInfo.length) {
+                                setTimeout(() => resolve(atlas));
+                            }
+                        },
+                        reject
+                    );
                 });
             });
         }
- 
+
         function getTextureInfo(line) {
-            if (spineAtlasInfo.length  === 1) {
-                return {
-                    type: textureType,
-                    data: {
-                        ...spineAtlasInfo[0],
-                        ...(Array.isArray(textureData)  ? textureData[0] : textureData)
-                    },
-                    name: line,
-                };
-            }
-            
-            if (!Array.isArray(textureData)  || textureData.length  !== spineAtlasInfo.length)  {
-                throw new Error("图片纹理不匹配");
-            }
-            
-            const textureInfo = textureData.find(e  => e.name  === line);
-            const mTextureInfo = spineAtlasInfo.find(e  => e.name  === line);
+            const textureInfo = textureData.find((e) => e.name === line);
+            const mTextureInfo = spineAtlasInfo.find((e) => e.name === line);
             if (!textureInfo && !mTextureInfo) {
                 throw new Error(`缺失纹理: ${line}`);
             }
-            
-            return { type: textureType, data: {...mTextureInfo,...textureInfo}, name: line };
+            return {
+                type: textureType,
+                data: { ...mTextureInfo, ...textureInfo },
+                name: line,
+                atlasInfo: mTextureInfo,
+                textureInfo: textureInfo,
+            };
         }
- 
+
         function loadTexture(info, success, fail) {
             try {
                 const { data, width, height } = info.data;
-                if (info.type  === "url") {
-                    const src = info.data.src  || info.data;
+                if (info.type === "url") {
+                    const src = info.data.src || info.data;
                     const texture = PIXI.BaseTexture.from(src);
-                    if(texture.valid){
-                        success(texture)
-                    }else{
-                        texture.on('loaded',  () => success(texture));
-                        texture.on('error',  fail);                        
+                    if (texture.valid) {
+                        success(texture);
+                    } else {
+                        texture.on("loaded", () => success(texture));
+                        texture.on("error", fail);
                     }
-                } else if (info.type  === "rgbaArray") {
-                    success(PIXI.BaseTexture.fromBuffer(data,  width, height));
+                } else if (info.type === "rgbaArray") {
+                    success(PIXI.BaseTexture.fromBuffer(data, width, height));
                 }
             } catch (error) {
                 fail(error);
             }
         }
- 
         function parseSkeletonData() {
             let parser;
             let data = skeletonData;
-            
+
             switch (type) {
                 case "skel":
                 case "binary":
                 case "arrayBuffer":
-                    parser = new spineSdk.SkeletonBinary(spineResult.atlas); 
+                    parser = new spineSdk.SkeletonBinary(spineResult.atlas);
                     data = new Uint8Array(data);
                     break;
                 case "obj":
-                    parser = new spineSdk.SkeletonJson(spineResult.atlas); 
+                    parser = new spineSdk.SkeletonJson(spineResult.atlas);
                     break;
                 case "json":
-                    data = JSON.parse(data); 
-                    parser = new spineSdk.SkeletonJson(spineResult.atlas); 
+                    data = JSON.parse(data);
+                    parser = new spineSdk.SkeletonJson(spineResult.atlas);
                     break;
                 default:
                     throw new Error(`未知的骨架数据类型: ${type}`);
             }
-            
-            return parser.SkeletonData 
-                ? parser.SkeletonData(data) 
-                : parser.readSkeletonData(data); 
+
+            return parser.SkeletonData ? parser.SkeletonData(data) : parser.readSkeletonData(data);
         }
     });
 };
-SimpleSpine.getFileDirectory  = function(src) {
-    // 处理空值或非法输入 
+SimpleSpine.getFileDirectory = function (src) {
+    // 处理空值或非法输入
     if (typeof src !== "string" || !src) return "";
- 
+
     // 标准化路径分隔符（兼容Windows和Unix）
-    const normalizedPath = src.replace(/\\/g,  '/');
- 
+    const normalizedPath = src.replace(/\\/g, "/");
+
     // 提取目录部分（通过最后一个'/'分割）
-    const lastSlashIndex = normalizedPath.lastIndexOf('/'); 
-    if (lastSlashIndex === -1) return ""; // 无目录结构 
-    
-    return normalizedPath.substring(0,  lastSlashIndex + 1);
+    const lastSlashIndex = normalizedPath.lastIndexOf("/");
+    if (lastSlashIndex === -1) return ""; // 无目录结构
+
+    return normalizedPath.substring(0, lastSlashIndex + 1);
 };
 
 SimpleSpine.uint8ArrayToString = function (u8Arr, encoding = "ascii") {
@@ -479,41 +584,32 @@ SimpleSpine.isVersion = function (str) {
     }
     if (typeof str == "object") {
         if (str.skeleton && str.skeleton.spine) {
-            if(str.skeleton.spine.length <= 3){
-                return str.skeleton.spine.replace(".", "")
+            if (str.skeleton.spine.length <= 3) {
+                return str.skeleton.spine.replace(".", "");
             }
             return str.skeleton.spine.slice(0, 3).replace(".", "");
         }
         return null;
     }
-    if(typeof str == "string"){
+    if (typeof str == "string") {
         let list = [
-            [9,"4.0"],
-            [8,"4.1"],
-            [9,"4.2"],
-            [29,"3.8"],
-            [29,"3.7"],
-            [29,"3.6"],
-            [29,"3.5"],
-            [29,"3.4"]
-        ]
-        for(var i=0;i<list.length;i++){
-            let a = str.slice(list[i][0],list[i][0]+6).match(/\d\.\d\.\d\d/g)
-            console.log(a)
-            if(a && a[0].startsWith(list[i][1])){
+            [9, "4.0"],
+            [8, "4.1"],
+            [9, "4.2"],
+            [29, "3.8"],
+            [29, "3.7"],
+            [29, "3.6"],
+            [29, "3.5"],
+            [29, "3.4"],
+            [29, "2.1"],
+        ];
+        for (var i = 0; i < list.length; i++) {
+            let a = str.slice(list[i][0], list[i][0] + 6).match(/\d\.\d\.\d\d/g);
+            if (a && a[0].startsWith(list[i][1])) {
                 return a[0].slice(0, 3).replace(".", "");
             }
-        }        
+        }
     }
-    // if (typeof str == "string") {
-    //     if(str.length <= 3){
-    //         return str.replace(".", "")
-    //     }
-    //     let vs = str.match(/\d\.\d\.\d\d/g);
-    //     if (vs) {
-    //         return vs[0].slice(0, 3).replace(".", "");
-    //     }
-    // }
     return null;
 };
 SimpleSpine.skelToJson = {};
@@ -574,28 +670,32 @@ SimpleSpine.skelToJson.BinaryInput = (function () {
     BinaryInput.prototype.readString = function () {
         let byteCount = this.readVarint(true);
         switch (byteCount) {
-        case 0:
-            return null;
-        case 1:
-            return "";
+            case 0:
+                return null;
+            case 1:
+                return "";
         }
         byteCount--;
         let chars = "";
-        for (let i = 0; i < byteCount;) {
+        for (let i = 0; i < byteCount; ) {
             let b = this.readByte();
             switch (b >> 4) {
-            case 12:
-            case 13:
-                chars += String.fromCharCode(((b & 0x1F) << 6 | this.readByte() & 0x3F));
-                i += 2;
-                break;
-            case 14:
-                chars += String.fromCharCode(((b & 0x0F) << 12 | (this.readByte() & 0x3F) << 6 | this.readByte() & 0x3F));
-                i += 3;
-                break;
-            default:
-                chars += String.fromCharCode(b);
-                i++;
+                case 12:
+                case 13:
+                    chars += String.fromCharCode(((b & 0x1f) << 6) | (this.readByte() & 0x3f));
+                    i += 2;
+                    break;
+                case 14:
+                    chars += String.fromCharCode(
+                        ((b & 0x0f) << 12) |
+                            ((this.readByte() & 0x3f) << 6) |
+                            (this.readByte() & 0x3f)
+                    );
+                    i += 3;
+                    break;
+                default:
+                    chars += String.fromCharCode(b);
+                    i++;
             }
         }
         return chars;
@@ -644,7 +744,7 @@ SimpleSpine.skelToJson.BinaryInput = (function () {
         }
         return array;
     };
-    BinaryInput.prototype.readAnimation = function (skeletonData, skins, version=36) {
+    BinaryInput.prototype.readAnimation = function (skeletonData, skins, version = 36) {
         input = this;
         let animationData = {};
         let duration = 0;
@@ -661,11 +761,7 @@ SimpleSpine.skelToJson.BinaryInput = (function () {
                     case 0: {
                         //SLOT_ATTACHMENT
                         const timeline = [];
-                        for (
-                            let frameIndex = 0;
-                            frameIndex < frameCount;
-                            ++frameIndex
-                        ) {
+                        for (let frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
                             let data = {
                                 time: input.readFloat(),
                                 name: input.readString(),
@@ -673,20 +769,13 @@ SimpleSpine.skelToJson.BinaryInput = (function () {
                             timeline.push(data);
                         }
                         slotMap.attachment = timeline;
-                        duration = Math.max(
-                            duration,
-                            timeline[frameCount - 1].time
-                        );
+                        duration = Math.max(duration, timeline[frameCount - 1].time);
                         break;
                     }
                     case 1: {
                         //SLOT_COLOR
                         const timeline = [];
-                        for (
-                            let frameIndex = 0;
-                            frameIndex < frameCount;
-                            ++frameIndex
-                        ) {
+                        for (let frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
                             let data = {
                                 time: input.readFloat(),
                                 color: input.readColorHex(),
@@ -697,21 +786,14 @@ SimpleSpine.skelToJson.BinaryInput = (function () {
                             timeline.push(data);
                         }
                         slotMap.color = timeline;
-                        duration = Math.max(
-                            duration,
-                            timeline[frameCount - 1].time
-                        );
+                        duration = Math.max(duration, timeline[frameCount - 1].time);
                         break;
                     }
                     case 2: {
                         //SLOT_TWO_COLOR
                         let timeline = [];
                         timeline.slotIndex = slotIndex;
-                        for (
-                            let frameIndex = 0;
-                            frameIndex < frameCount;
-                            ++frameIndex
-                        ) {
+                        for (let frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
                             let data = {
                                 time: input.readFloat(),
                                 light: input.readColorHex(),
@@ -723,10 +805,7 @@ SimpleSpine.skelToJson.BinaryInput = (function () {
                             timeline.push(data);
                         }
                         slotMap.twoColor = timeline;
-                        duration = Math.max(
-                            duration,
-                            timeline[frameCount - 1].time
-                        );
+                        duration = Math.max(duration, timeline[frameCount - 1].time);
                         break;
                     }
                     default:
@@ -752,11 +831,7 @@ SimpleSpine.skelToJson.BinaryInput = (function () {
 
                 const processFrame = (frameHandler) => {
                     const timeline = [];
-                    for (
-                        let frameIndex = 0;
-                        frameIndex < frameCount;
-                        frameIndex++
-                    ) {
+                    for (let frameIndex = 0; frameIndex < frameCount; frameIndex++) {
                         const data = frameHandler();
                         if (frameIndex < frameCount - 1) {
                             const curve = input.readCurve(data);
@@ -775,10 +850,7 @@ SimpleSpine.skelToJson.BinaryInput = (function () {
                             angle: input.readFloat(),
                         }));
                         boneMap.rotate = timeline;
-                        duration = Math.max(
-                            duration,
-                            timeline[frameCount - 1].time
-                        );
+                        duration = Math.max(duration, timeline[frameCount - 1].time);
                         break;
                     }
 
@@ -818,11 +890,11 @@ SimpleSpine.skelToJson.BinaryInput = (function () {
                     mix: input.readFloat(),
                     bendPositive: input.readByte() != 255,
                 };
-                switch(version){
+                switch (version) {
                     case 37:
-                        data.compress = input.readBoolean()
-                        data.stretch = input.readBoolean()
-                        break
+                        data.compress = input.readBoolean();
+                        data.stretch = input.readBoolean();
+                        break;
                 }
                 if (frameIndex < frameCount - 1) {
                     let curve = input.readCurve();
@@ -842,7 +914,7 @@ SimpleSpine.skelToJson.BinaryInput = (function () {
             const index = input.readVarint(1);
             const frameCount = input.readVarint(1);
             const timeline = [];
-            
+
             for (let frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
                 let data = {
                     time: input.readFloat(),
@@ -879,11 +951,7 @@ SimpleSpine.skelToJson.BinaryInput = (function () {
 
                 const processFrame = (frameHandler) => {
                     const timeline = [];
-                    for (
-                        let frameIndex = 0;
-                        frameIndex < frameCount;
-                        frameIndex++
-                    ) {
+                    for (let frameIndex = 0; frameIndex < frameCount; frameIndex++) {
                         const data = frameHandler();
                         if (frameIndex < frameCount - 1) {
                             const curve = input.readCurve();
@@ -934,9 +1002,7 @@ SimpleSpine.skelToJson.BinaryInput = (function () {
 
                 if (vertexCount > 0) {
                     const startOffset = input.readVarint(1);
-                    const vertices = Array.from({ length: vertexCount }, () =>
-                        input.readFloat()
-                    );
+                    const vertices = Array.from({ length: vertexCount }, () => input.readFloat());
                     data.vertices = vertices;
                     data.offset = startOffset;
                 }
@@ -950,11 +1016,11 @@ SimpleSpine.skelToJson.BinaryInput = (function () {
             return timeline;
         };
 
-        function getAttachment (attachments, meshName){
-            for(var attachmentName in attachments){
-                if(attachments[attachmentName].name == meshName)
-                    return attachment = attachments[attachmentName];
-            } 
+        function getAttachment(attachments, meshName) {
+            for (var attachmentName in attachments) {
+                if (attachments[attachmentName].name == meshName)
+                    return (attachment = attachments[attachmentName]);
+            }
         }
 
         const skinCount = input.readVarint(1);
@@ -972,18 +1038,15 @@ SimpleSpine.skelToJson.BinaryInput = (function () {
                 const attachmentCount = input.readVarint(1);
                 for (let iii = 0; iii < attachmentCount; iii++) {
                     const attachmentName = input.readString();
-                    let attachments = skin[slotName]
-                    let attachment = getAttachment(attachments,attachmentName)
+                    let attachments = skin[slotName];
+                    let attachment = getAttachment(attachments, attachmentName);
                     if (!attachment) throw new Error("匹配deform中的attachment失败");
 
                     const frameCount = input.readVarint(1);
                     const timeline = processDeformFrames(frameCount);
 
                     slot[attachmentName] = timeline;
-                    duration = Math.max(
-                        duration,
-                        timeline[frameCount - 1].time
-                    );
+                    duration = Math.max(duration, timeline[frameCount - 1].time);
                 }
 
                 skinMap[slotName] = slot;
@@ -1028,9 +1091,7 @@ SimpleSpine.skelToJson.BinaryInput = (function () {
             const timeline = [];
             for (let i = 0; i < eventCount; ++i) {
                 let time = input.readFloat();
-                let name = Object.keys(skeletonData.events)[
-                    input.readVarint(1)
-                ];
+                let name = Object.keys(skeletonData.events)[input.readVarint(1)];
                 const event = {}; //spEvent_create(time, eventData);
                 event.int = input.readVarint(0);
                 event.float = input.readFloat();
@@ -1071,11 +1132,7 @@ SimpleSpine.skelToJson.BinaryInput = (function () {
                 const timeline = new Array(frameCount);
 
                 // 统一帧数据处理逻辑
-                for (
-                    let frameIndex = 0;
-                    frameIndex < frameCount;
-                    frameIndex++
-                ) {
+                for (let frameIndex = 0; frameIndex < frameCount; frameIndex++) {
                     const time = input.readFloat();
                     timeline[frameIndex] = { time };
 
@@ -1098,8 +1155,7 @@ SimpleSpine.skelToJson.BinaryInput = (function () {
                             return null;
                     }
                 }
-                timelineMap[timelineType === 3 ? "attachment" : "color"] =
-                    timeline;
+                timelineMap[timelineType === 3 ? "attachment" : "color"] = timeline;
                 duration = Math.max(duration, timeline[frameCount - 1].time);
             }
 
@@ -1123,11 +1179,7 @@ SimpleSpine.skelToJson.BinaryInput = (function () {
                 const timeline = new Array(frameCount);
 
                 // 统一帧数据读取逻辑
-                for (
-                    let frameIndex = 0;
-                    frameIndex < frameCount;
-                    frameIndex++
-                ) {
+                for (let frameIndex = 0; frameIndex < frameCount; frameIndex++) {
                     const frame = { time: input.readFloat() };
 
                     switch (type) {
@@ -1201,9 +1253,7 @@ SimpleSpine.skelToJson.BinaryInput = (function () {
             if (skeletonData.ik[constraintIndex]) {
                 ikData[skeletonData.ik[constraintIndex].name] = timeline;
             } else {
-                console.warn(
-                    `Missing  IK constraint index: ${constraintIndex}`
-                );
+                console.warn(`Missing  IK constraint index: ${constraintIndex}`);
             }
         }
 
@@ -1215,11 +1265,7 @@ SimpleSpine.skelToJson.BinaryInput = (function () {
             for (var ii = 0, nn = input.readVarint(true); ii < nn; ii++) {
                 var slotIndex = input.readVarint(true);
                 var meshMap = {};
-                for (
-                    var iii = 0, nnn = input.readVarint(true);
-                    iii < nnn;
-                    iii++
-                ) {
+                for (var iii = 0, nnn = input.readVarint(true); iii < nnn; iii++) {
                     var meshName = input.readString();
                     var frameCount = input.readVarint(true);
                     var attachment;
@@ -1231,14 +1277,9 @@ SimpleSpine.skelToJson.BinaryInput = (function () {
                         if (attachments[attachmentName].name == meshName)
                             attachment = attachments[attachmentName];
                     }
-                    if (!attachment)
-                        console.log("FFD attachment not found: " + meshName);
+                    if (!attachment) console.log("FFD attachment not found: " + meshName);
                     var timeline = new Array(frameCount);
-                    for (
-                        var frameIndex = 0;
-                        frameIndex < frameCount;
-                        frameIndex++
-                    ) {
+                    for (var frameIndex = 0; frameIndex < frameCount; frameIndex++) {
                         var time = input.readFloat();
                         var vertexCount;
                         if (attachment.type == "mesh") {
@@ -1249,11 +1290,7 @@ SimpleSpine.skelToJson.BinaryInput = (function () {
                         }
 
                         var vertices = new Array(vertexCount);
-                        for (
-                            var verticeIdx = 0;
-                            verticeIdx < vertexCount;
-                            verticeIdx++
-                        ) {
+                        for (var verticeIdx = 0; verticeIdx < vertexCount; verticeIdx++) {
                             vertices[verticeIdx] = 0.0;
                         }
                         var bugFixMultiplicator = 0.1;
@@ -1261,14 +1298,9 @@ SimpleSpine.skelToJson.BinaryInput = (function () {
                         var end = input.readVarint(true);
                         if (end == 0) {
                             if (attachment.type == "mesh") {
-                                for (
-                                    var verticeIdx = 0;
-                                    verticeIdx < vertexCount;
-                                    verticeIdx++
-                                ) {
+                                for (var verticeIdx = 0; verticeIdx < vertexCount; verticeIdx++) {
                                     vertices[verticeIdx] +=
-                                        attachment.vertices[verticeIdx] *
-                                        bugFixMultiplicator;
+                                        attachment.vertices[verticeIdx] * bugFixMultiplicator;
                                 }
                             }
                         } else {
@@ -1281,27 +1313,18 @@ SimpleSpine.skelToJson.BinaryInput = (function () {
 
                             if (attachment.type == "mesh") {
                                 var meshVertices = attachment.vertices;
-                                for (
-                                    var v = 0, vn = vertices.length;
-                                    v < vn;
-                                    v++
-                                ) {
-                                    vertices[v] +=
-                                        meshVertices[v] * bugFixMultiplicator;
+                                for (var v = 0, vn = vertices.length; v < vn; v++) {
+                                    vertices[v] += meshVertices[v] * bugFixMultiplicator;
                                 }
                             }
                         }
                         timeline[frameIndex] = {};
                         timeline[frameIndex].time = time;
                         timeline[frameIndex].vertices = vertices;
-                        if (frameIndex < frameCount - 1)
-                            input.readCurve(frameIndex, timeline);
+                        if (frameIndex < frameCount - 1) input.readCurve(frameIndex, timeline);
                     }
                     meshMap[meshName] = timeline;
-                    duration = Math.max(
-                        duration,
-                        timeline[frameCount - 1].time
-                    );
+                    duration = Math.max(duration, timeline[frameCount - 1].time);
                 }
                 slotMap[skeletonData.slots[slotIndex].name] = meshMap;
             }
@@ -1344,9 +1367,7 @@ SimpleSpine.skelToJson.BinaryInput = (function () {
             const timeline = [];
             for (let i = 0; i < eventCount; ++i) {
                 let time = input.readFloat();
-                let name = Object.keys(skeletonData.events)[
-                    input.readVarint(1)
-                ];
+                let name = Object.keys(skeletonData.events)[input.readVarint(1)];
                 const event = {}; //spEvent_create(time, eventData);
                 event.int = input.readVarint(0);
                 event.float = input.readFloat();
@@ -1392,11 +1413,7 @@ SimpleSpine.skelToJson.BinaryInput = (function () {
             }
         }
         return skin;
-        function spSkeletonBinary_readAttachment(
-            attachmentName,
-            skeletonData,
-            nonessential
-        ) {
+        function spSkeletonBinary_readAttachment(attachmentName, skeletonData, nonessential) {
             let name = input.readString();
             //console.log(attachmentName,name)
             let freeName = name !== null;
@@ -1471,18 +1488,12 @@ SimpleSpine.skelToJson.BinaryInput = (function () {
                         vertexCount: input.readVarint(1),
                     };
                     mesh.uvs = input.readFloatArray(mesh.vertexCount * 2, 1);
-                    mesh.triangles = input.readShortArray(
-                        input,
-                        mesh.trianglesCount
-                    );
+                    mesh.triangles = input.readShortArray(input, mesh.trianglesCount);
                     input.readVertices(mesh, mesh.vertexCount);
                     mesh.hull = input.readVarint(1); // * 2;
 
                     if (nonessential) {
-                        mesh.edges = input.readShortArray(
-                            input,
-                            mesh.edgesCount
-                        );
+                        mesh.edges = input.readShortArray(input, mesh.edgesCount);
                         mesh.width = input.readFloat();
                         mesh.height = input.readFloat();
                     }
@@ -1558,7 +1569,9 @@ SimpleSpine.skelToJson.BinaryInput = (function () {
                 }
             }
             attachment.type = typeMode[type];
-            if(!attachment.name){attachment.name = attachmentName}
+            if (!attachment.name) {
+                attachment.name = attachmentName;
+            }
             return attachment;
         }
     };
@@ -1575,11 +1588,7 @@ SimpleSpine.skelToJson.BinaryInput = (function () {
             let slot = {};
             for (let ii = 0; ii < nn; ++ii) {
                 const name = input.readString();
-                const attachment = readAttachment(
-                    name,
-                    skeletonData,
-                    nonessential
-                );
+                const attachment = readAttachment(name, skeletonData, nonessential);
                 if (attachment) {
                     slot[name] = attachment;
                 }
@@ -1661,18 +1670,14 @@ SimpleSpine.skelToJson.BinaryInput = (function () {
                         closed: input.readBoolean(),
                         constantSpeed: input.readBoolean(),
                         vertices: input.readVertices(input.readVarint(true)),
-                        lengths: input.readFloatArray(
-                            Math.ceil(attachment.vertices.length / 3)
-                        ),
+                        lengths: input.readFloatArray(Math.ceil(attachment.vertices.length / 3)),
                         ...(nonessential && { color: input.readColorHex() }),
                     });
                     break;
 
                 case 6: // CLIPPING
                     const endSlotIndex = input.readVarint(true);
-                    attachment.vertices = input.readVertices(
-                        input.readVarint(true)
-                    );
+                    attachment.vertices = input.readVertices(input.readVarint(true));
                     attachment.end = skeletonData.slots[endSlotIndex].name;
                     if (nonessential) attachment.color = input.readColorHex();
                     break;
@@ -1800,9 +1805,7 @@ SimpleSpine.skelToJson.spine36To38 = function (obj) {
                         });
                     }
                     if (obj["rotate"] && obj[key].length != 0) {
-                        let bones = skel.bones.find(
-                            (item) => item.name === objName
-                        );
+                        let bones = skel.bones.find((item) => item.name === objName);
                         if (bones && bones.rotation) {
                             obj["rotate"].forEach((e) => {
                                 let na0 = -(e.angle + bones.rotation * 2) + 180;
@@ -1867,13 +1870,13 @@ SimpleSpine.skelToJson.readSkeletonData36And37 = function (binary) {
         width: input.readFloat(),
         height: input.readFloat(),
     };
-    let version = skeleton.spine.startsWith(3.7) ? 37 : 36
+    let version = skeleton.spine.startsWith(3.7) ? 37 : 36;
 
     var nonessential = input.readBoolean();
     if (nonessential) {
         skeleton.fps = input.readFloat();
         skeleton.images = input.readString();
-        if(version == 37){
+        if (version == 37) {
             input.readString();
         }
     }
@@ -1952,9 +1955,7 @@ SimpleSpine.skelToJson.readSkeletonData36And37 = function (binary) {
         }
         // 读取附加名称和混合模式
         slotData.attachment = input.readString();
-        slotData.blend = ["normal", "additive", "multiply", "screen"][
-            input.readVarint(1)
-        ];
+        slotData.blend = ["normal", "additive", "multiply", "screen"][input.readVarint(1)];
         skeletonData.slots[i] = slotData;
     }
 
@@ -2048,9 +2049,7 @@ SimpleSpine.skelToJson.readSkeletonData36And37 = function (binary) {
         // 读取位置模式、间距模式和旋转模式
         data.positionMode = ["fixed", "percent"][input.readVarint(1)];
         data.spacingMode = ["length", "fixed", "percent"][input.readVarint(1)];
-        data.rotateMode = ["tangent", "chain", "chainScale"][
-            input.readVarint(1)
-        ];
+        data.rotateMode = ["tangent", "chain", "chainScale"][input.readVarint(1)];
         // 读取旋转偏移和位置
         data.rotation = input.readFloat(input);
         data.position = input.readFloat(input);
@@ -2092,10 +2091,7 @@ SimpleSpine.skelToJson.readSkeletonData36And37 = function (binary) {
     /* Skins. */
     for (let i = skeletonData.defaultSkin ? 1 : 0; i < skinsCount; ++i) {
         const skinName = input.readString(input);
-        skeletonData.skins[skinName] = input.readSkin(
-            skeletonData,
-            nonessential
-        );
+        skeletonData.skins[skinName] = input.readSkin(skeletonData, nonessential);
         skins.push({
             name: skinName,
             data: skeletonData.skins[skinName],
@@ -2111,12 +2107,12 @@ SimpleSpine.skelToJson.readSkeletonData36And37 = function (binary) {
         eventData.intValue = input.readVarint(0);
         eventData.floatValue = input.readFloat();
         eventData.stringValue = input.readString();
-        if(version == 37){
+        if (version == 37) {
             eventData.audioPath = input.readString();
             if (eventData.audioPath) {
                 eventData.volume = input.readFloat();
                 eventData.balance = input.readFloat();
-            }            
+            }
         }
         skeletonData.events[name] = eventData; // 存储事件数据
     }
@@ -2233,9 +2229,7 @@ SimpleSpine.skelToJson.readSkeletonData34And35 = function (binary) {
         // }
         // 读取附加名称和混合模式
         slotData.attachment = input.readString();
-        slotData.blend = ["normal", "additive", "multiply", "screen"][
-            input.readVarint(1)
-        ];
+        slotData.blend = ["normal", "additive", "multiply", "screen"][input.readVarint(1)];
         skeletonData.slots[i] = slotData;
     }
 
@@ -2326,9 +2320,7 @@ SimpleSpine.skelToJson.readSkeletonData34And35 = function (binary) {
         // 读取位置模式、间距模式和旋转模式
         data.positionMode = ["fixed", "percent"][input.readVarint(1)];
         data.spacingMode = ["length", "fixed", "percent"][input.readVarint(1)];
-        data.rotateMode = ["tangent", "chain", "chainScale"][
-            input.readVarint(1)
-        ];
+        data.rotateMode = ["tangent", "chain", "chainScale"][input.readVarint(1)];
         // 读取旋转偏移和位置
         data.rotation = input.readFloat(input);
         data.position = input.readFloat(input);
@@ -2376,10 +2368,7 @@ SimpleSpine.skelToJson.readSkeletonData34And35 = function (binary) {
     /* Skins. */
     for (let i = skeletonData.defaultSkin ? 1 : 0; i < skinsCount; ++i) {
         const skinName = input.readString(input);
-        skeletonData.skins[skinName] = input.readSkin(
-            skeletonData,
-            nonessential
-        );
+        skeletonData.skins[skinName] = input.readSkin(skeletonData, nonessential);
         skins.push({
             name: skinName,
             data: skeletonData.skins[skinName],
@@ -2507,9 +2496,7 @@ SimpleSpine.skelToJson.readSkeletonData21 = function (binary) {
             slotData.color = color;
         }
         slotData.attachment = input.readString();
-        slotData.blend = ["normal", "additive", "multiply", "screen"][
-            input.readVarint(1)
-        ];
+        slotData.blend = ["normal", "additive", "multiply", "screen"][input.readVarint(1)];
         skeletonData.slots[i] = slotData;
     }
 
@@ -2538,10 +2525,7 @@ SimpleSpine.skelToJson.readSkeletonData21 = function (binary) {
     /* Skins. */
     for (let i = skeletonData.defaultSkin ? 1 : 0; i < skinsCount; ++i) {
         const skinName = input.readString(input);
-        skeletonData.skins[skinName] = input.readSkin21(
-            skeletonData,
-            nonessential
-        );
+        skeletonData.skins[skinName] = input.readSkin21(skeletonData, nonessential);
         skins.push({
             name: skinName,
             data: skeletonData.skins[skinName],
