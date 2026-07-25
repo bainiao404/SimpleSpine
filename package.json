@@ -1,0 +1,21 @@
+{
+  "name": "simplespinenext",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Unified spine-pixi runtime with SimpleSpine wrapper built using Esbuild",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "devDependencies": {
+    "@esotericsoftware/spine-pixi-v7": "^4.2.83",
+    "@pixi/core": "^7.4.2",
+    "@pixi/display": "^7.4.2",
+    "@pixi/graphics": "^7.4.2",
+    "@pixi/mesh": "^7.4.2",
+    "@pixi/mesh-extras": "^7.4.2",
+    "@pixi/sprite": "^7.4.2",
+    "@pixi/assets": "^7.4.2",
+    "esbuild": "^0.19.11",
+    "typescript": "5.4.2"
+  }
+}
