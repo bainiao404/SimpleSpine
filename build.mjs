@@ -37,7 +37,7 @@ async function build() {
   const startTime = Date.now();
 
   const baseConfig = {
-    entryPoints: ['src/index.js'],
+    entryPoints: ['src/index.ts'],
     bundle: true,
     sourcemap: true,
     minify: true,
