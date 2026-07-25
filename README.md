@@ -13,18 +13,18 @@
 
 ---
 
-## ✨ 核心特性
+## 核心特性
 
-- **🚀 自动版本检测 (Autodetect)**：根据骨骼数据的二进制魔数或 JSON 头信息，全自动分析出源文件 Spine 版本。
-- **🔄 平滑向下兼容适配**：内置 legacy-to-v3.8 规范化适配层（如 skins 转 array、斜切角度和曲线拟合修正、skinnedmesh 向上兼容转换），免去频繁重导老旧美术资源的烦恼。
-- **💾 直接消费内存数据 (Memory Load)**：全新支持直接传入已读入内存的 `ArrayBuffer`、`string` 或 `object` 进行脱网加载，极大方便了本地文件拖拽预览、网络预载集成以及端侧加密数据解密后直接加载的特殊场景。
-- **🌐 彻底去全局 window 依赖 (SSR / Test Friendly)**：解耦对 `window.PIXI` 的直接引用。提供 `registerPIXI()` 注册器，支持在无浏览器环境（如 Node.js 单元测试、SSR 服务端渲染）中无缝运行。
-- **TypeScript 强类型支持**：所有模块均使用 TypeScript 进行了完全重构，提供完整、详尽的类型声明与代码自动补全。
-- **⚡ Esbuild 高效构建**：底层基于 Esbuild 实施秒级打包编译，同时导出 ESM 规范的 `.mjs` 模块与支持直接在浏览器 `<script>` 导入的 IIFE 全局对象 `.js`（已处理 esbuild 互操作代理以无缝共享网页全局的 `PIXI` 单例）。
+- **自动版本检测 (Autodetect)**：根据骨骼数据的二进制魔数或 JSON 头信息，全自动分析出源文件 Spine 版本。
+- **平滑向下兼容适配**：内置 legacy-to-v3.8 规范化适配层（如 skins 转 array、斜切角度和曲线拟合修正、skinnedmesh 向上兼容转换），免去频繁重导老旧美术资源的烦恼。
+- **直接消费内存数据 (Memory Load)**：全新支持直接传入已读入内存的 `ArrayBuffer`、`string` 或 `object` 进行脱网加载，极大方便了本地文件拖拽预览、网络预载集成以及端侧加密数据解密后直接加载的特殊场景。
+- **彻底去全局 window 依赖 (SSR / Test Friendly)**：解耦对 `window.PIXI` 的直接引用。提供 `registerPIXI()` 注册器，支持在无浏览器环境（如 Node.js 单元测试、SSR 服务端渲染）中无缝运行。
+- **TypeScript 强类型支持**：所有模块均使用 TypeScript 进行了完全重构，提供完整、详尽 of 的类型声明与代码自动补全。
+- **Esbuild 高效构建**：底层基于 Esbuild 实施秒级打包编译，同时导出 ESM 规范的 `.mjs` 模块与支持直接在浏览器 `<script>` 导入 the IIFE 全局对象 `.js`（已处理 esbuild 互操作代理以无缝共享网页全局的 `PIXI` 单例）。
 
 ---
 
-## 📦 构建与集成
+## 构建与集成
 
 ### 1. 编译打包
 
@@ -39,12 +39,12 @@ npm run build
 ```
 
 编译产物包括：
-- `dist/simplespine.js`：适合浏览器脚本引入的 IIFE 库文件（全局暴露 `SimpleSpine` 对象）。
+- `dist/simplespine.js`：适合浏览器脚本引入的 IIFE 库 file（全局暴露 `SimpleSpine` 对象）。
 - `dist/simplespine.mjs`：适合 Vite / Webpack / ESM 模块化打包工具链的现代 ESM 包。
 
 ---
 
-## 🛠 快速上手
+## 快速上手
 
 ### 方式一：传统网络加载 (XHR Load)
 
@@ -111,7 +111,7 @@ spine.debug = null;
 
 ---
 
-## 📂 项目结构
+## 项目结构
 
 ```text
 ├── bundles/                  # pixi-spine 官方包底层封装汇总层
@@ -132,6 +132,6 @@ spine.debug = null;
 
 ---
 
-## 📄 开源许可
+## 开源许可
 
 本项目遵循 [MIT License](LICENSE) 开源许可协议。内部集成的不同版本 Spine Runtime 源码版权分属 Esoteric Software 所有，仅限在拥有合法 Spine 授权的项目中使用。
