@@ -1,5 +1,5 @@
 /**
- * SimpleSpine v0.2 主入口模块
+ * SimplePixiSpine v0.2 主入口模块
  * 采用 ES6 模块化设计，提供 Spine 动画的加载、解析与实例化功能
  */
 import * as pixiSpine from '../bundles/pixi-spine/src/index';
@@ -445,7 +445,7 @@ export function spine(spineData: any): any {
     };
 }
 
-let SimpleSpine = {
+let SimplePixiSpine = {
     load,
     spine,
     loadFile,
@@ -459,8 +459,8 @@ let SimpleSpine = {
 
 if (typeof window !== 'undefined') {
     const w = window as any;
-    w.SimpleSpine = w.SimpleSpine || SimpleSpine;
+    w.SimplePixiSpine = w.SimplePixiSpine || SimplePixiSpine;
 }
 
 // 默认导出对象，方便在不支持命名导入的场景下使用
-export default SimpleSpine;
+export default SimplePixiSpine;

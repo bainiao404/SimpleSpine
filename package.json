@@ -2,7 +2,7 @@
   "name": "simple-pixi-spine",
   "version": "1.0.0",
   "private": true,
-  "description": "Unified spine-pixi runtime with SimpleSpine wrapper built using Esbuild",
+  "description": "Unified spine-pixi runtime with SimplePixiSpine wrapper built using Esbuild",
   "scripts": {
     "build": "node build.mjs"
   },

@@ -11,7 +11,7 @@ const bannerContent = `/*!
  * simple-pixi-spine - v${pkg.version}
  * Compiled ${compiled}
  *
- * Integrated spine-pixi runtime with SimpleSpine wrapper.
+ * Integrated spine-pixi runtime with SimplePixiSpine wrapper.
  * All rights reserved.
  */`;
 
@@ -80,7 +80,7 @@ const pixiGlobalsPlugin = {
 };
 
 async function build() {
-  console.log('🚀 Starting Esbuild compilation for SimpleSpineNext...');
+  console.log('🚀 Starting Esbuild compilation for SimplePixiSpine...');
   const startTime = Date.now();
 
   const baseConfig = {
@@ -108,7 +108,7 @@ async function build() {
   await esbuild.build({
     ...baseConfig,
     format: 'iife',
-    globalName: 'SimpleSpine',
+    globalName: 'SimplePixiSpine',
     plugins: [pixiGlobalsPlugin],
     outfile: 'dist/simple-pixi-spine.js',
   });
