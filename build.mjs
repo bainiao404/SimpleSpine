@@ -30,7 +30,28 @@ const aliases = {
   '@pixi-spine/runtime-4.2': './packages/runtime-4.2/src/index.ts',
 };
 
-const external = ['@pixi/*'];
+const pixiGlobalsPlugin = {
+  name: 'pixi-globals',
+  setup(build) {
+    build.onResolve({ filter: /^@pixi\// }, args => {
+      return { path: args.path, namespace: 'pixi-globals' };
+    });
+    build.onLoad({ filter: /.*/, namespace: 'pixi-globals' }, args => {
+      return {
+        contents: `
+          const proxy = new Proxy({}, {
+            get(target, prop) {
+              const PIXI = (typeof window !== 'undefined' && window.PIXI) || (typeof global !== 'undefined' && global.PIXI);
+              return PIXI ? PIXI[prop] : undefined;
+            }
+          });
+          module.exports = proxy;
+        `,
+        loader: 'js',
+      };
+    });
+  },
+};
 
 async function build() {
   console.log('🚀 Starting Esbuild compilation for SimpleSpineNext...');
@@ -42,26 +63,27 @@ async function build() {
     sourcemap: true,
     minify: true,
     target: 'es2020',
-    external,
     alias: aliases,
     banner: {
       js: bannerContent,
     },
   };
 
-  // 1. Build ES6 module (.mjs)
+  // 1. Build ES6 module (.mjs) - Keep external dependencies
   await esbuild.build({
     ...baseConfig,
     format: 'esm',
+    external: ['@pixi/*'],
     outfile: 'dist/simplespine.mjs',
   });
   console.log('✓ Created ESM Bundle: dist/simplespine.mjs');
 
-  // 2. Build IIFE script (.js)
+  // 2. Build IIFE script (.js) - Inline external @pixi/* to global window.PIXI lookup
   await esbuild.build({
     ...baseConfig,
     format: 'iife',
     globalName: 'SimpleSpine',
+    plugins: [pixiGlobalsPlugin],
     outfile: 'dist/simplespine.js',
   });
   console.log('✓ Created IIFE Script: dist/simplespine.js');
