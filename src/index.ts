@@ -284,12 +284,39 @@ export async function readSpineSpineData(config: any): Promise<any> {
         texture: textureData.map((t: any) => t.texture).filter(Boolean),
         originalSpine,
         version,
-        setPremultiplied: function (isP?: boolean) {
-            const needsP = isP || isPremultiplied(this.texture[0]);
+        isPremultiplied: false,
+        textureMode: 3,
+        setPremultiplied: function (this: any, isP?: number | boolean) {
+            let mode: 'premultiplied-alpha' | 'no-premultiply-alpha' | 'premultiply-alpha-on-upload';
+
+            if (isP === undefined || isP === null || isP === 3) {
+                const detectedP = isPremultiplied(this.texture[0]);
+                mode = detectedP ? 'premultiplied-alpha' : 'no-premultiply-alpha';
+                this.isPremultiplied = detectedP;
+                this.textureMode = 3;
+            } else if (isP === 1) {
+                mode = 'premultiply-alpha-on-upload';
+                this.isPremultiplied = true;
+                this.textureMode = 1;
+            } else if (isP === 2 || isP === true) {
+                mode = 'premultiplied-alpha';
+                this.isPremultiplied = true;
+                this.textureMode = 2;
+            } else {
+                mode = 'no-premultiply-alpha';
+                this.isPremultiplied = false;
+                this.textureMode = 0;
+            }
+
             this.texture.forEach((t: any) => {
                 if (t.isPremultipliedToStraight) return;
-                t.isPremultipliedToStraight = true;
-                t.source.alphaMode = needsP ? pixi.ALPHA_MODES.PREMULTIPLIED_ALPHA : pixi.ALPHA_MODES.NO_PREMULTIPLIED_ALPHA;
+                const source = t.source || t.baseTexture || t;
+                if (source) {
+                    source.alphaMode = mode;
+                    if (typeof source.update === 'function') {
+                        source.update();
+                    }
+                }
             });
         },
     };

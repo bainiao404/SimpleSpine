@@ -44,21 +44,35 @@ export function isPremultiplied(baseTexture: any): boolean {
         targetTexture = targetTexture.texture;
     }
 
-    const resource = targetTexture.resource;
+    const sourceObj = targetTexture.source || targetTexture.baseTexture || targetTexture;
+    if (!sourceObj) return false;
+
+    const resource = sourceObj.resource || (sourceObj.source ? sourceObj.source.resource : null);
     if (!resource) return false;
 
-    if (resource.source) {
+    const imageElement = resource.source || resource;
+    if (imageElement && (
+        imageElement.width > 0 &&
+        imageElement.height > 0 &&
+        (
+            imageElement instanceof HTMLImageElement ||
+            imageElement instanceof HTMLCanvasElement ||
+            (typeof ImageBitmap !== 'undefined' && imageElement instanceof ImageBitmap) ||
+            (imageElement.nodeName && (imageElement.nodeName === 'IMG' || imageElement.nodeName === 'CANVAS'))
+        )
+    )) {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d', { premultiplyAlpha: 'none' as any }) as CanvasRenderingContext2D;
         if (!ctx) return false;
         canvas.width = targetTexture.width;
         canvas.height = targetTexture.height;
-        ctx.drawImage(resource.source, 0, 0);
+        ctx.drawImage(imageElement, 0, 0);
 
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         return isPremultipliedAlpha(imageData.data, 20);
-    } else if (resource.data) {
-        return isPremultipliedAlpha(resource.data, 20);
+    } else if (resource.data || (imageElement && imageElement.data)) {
+        const data = resource.data || imageElement.data;
+        return isPremultipliedAlpha(data, 20);
     }
     return false;
 }
