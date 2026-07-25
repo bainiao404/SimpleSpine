@@ -1,6 +1,6 @@
 {
   "name": "simple-pixi-spine",
-  "version": "0.1.0-pixi7",
+  "version": "0.1.1",
   "description": "Unified spine-pixi runtime with SimplePixiSpine wrapper built using Esbuild",
   "main": "./dist/simple-pixi-spine.js",
   "module": "./dist/simple-pixi-spine.mjs",
