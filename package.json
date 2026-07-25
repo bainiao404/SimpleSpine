@@ -1,14 +1,28 @@
 {
   "name": "simple-pixi-spine",
-  "version": "1.0.0",
-  "private": true,
+  "version": "0.1.0",
   "description": "Unified spine-pixi runtime with SimplePixiSpine wrapper built using Esbuild",
+  "main": "./dist/simple-pixi-spine.js",
+  "module": "./dist/simple-pixi-spine.mjs",
+  "types": "./dist/types/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/simple-pixi-spine.mjs",
+      "require": "./dist/simple-pixi-spine.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "node build.mjs"
+    "build": "node build.mjs && tsc"
+  },
+  "peerDependencies": {
+    "pixi.js": "^8.2.3"
   },
   "devDependencies": {
     "@esotericsoftware/spine-pixi-v8": "^4.2.53",
-    "pixi.js": "^8.2.3",
     "esbuild": "^0.19.11",
     "typescript": "5.4.2"
   }
