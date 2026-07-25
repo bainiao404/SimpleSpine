@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SimpleSpineNext Demo</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --panel-bg: rgba(20, 26, 46, 0.6);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --primary-glow: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+            --accent-color: #00f2fe;
+            --text-color: #f3f4f6;
+            --text-muted: #9ca3af;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Outfit', sans-serif;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            width: 100%;
+            padding: 24px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            border-bottom: 1px solid var(--border-color);
+            backdrop-filter: blur(12px);
+            position: fixed;
+            top: 0;
+            z-index: 10;
+            background: rgba(11, 15, 25, 0.8);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-badge {
+            background: var(--primary-glow);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 14px;
+            letter-spacing: 1px;
+            color: #000;
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.3);
+        }
+
+        .logo-title {
+            font-weight: 600;
+            font-size: 20px;
+            background: linear-gradient(to right, #fff, #9ca3af);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        main {
+            margin-top: 100px;
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            gap: 24px;
+            padding: 24px;
+            box-sizing: border-box;
+            flex-grow: 1;
+        }
+
+        .viewer-card {
+            flex: 1;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            backdrop-filter: blur(20px);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            height: 600px;
+        }
+
+        .canvas-container {
+            flex-grow: 1;
+            width: 100%;
+            position: relative;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 5;
+            transition: opacity 0.5s ease;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(0, 242, 254, 0.1);
+            border-top-color: var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .sidebar-card {
+            width: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .control-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            backdrop-filter: blur(20px);
+            padding: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn:hover {
+            background: rgba(0, 242, 254, 0.05);
+            border-color: rgba(0, 242, 254, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .btn.active {
+            background: var(--primary-glow);
+            border-color: transparent;
+            color: #000;
+            box-shadow: 0 10px 20px rgba(0, 242, 254, 0.2);
+        }
+
+        .btn-play::after {
+            content: '▶';
+            font-size: 10px;
+        }
+
+        .btn.active::after {
+            content: '●';
+            color: #000;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .stats-label {
+            color: var(--text-muted);
+        }
+
+        .stats-value {
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        .badge-legacy {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-container">
+            <div class="logo-badge">NEXT</div>
+            <div class="logo-title">SimpleSpineNext</div>
+        </div>
+    </header>
+
+    <main>
+        <div class="viewer-card">
+            <div id="loading" class="loading-overlay">
+                <div class="spinner"></div>
+                <div id="loading-text" style="font-weight: 600;">正在拉取并解析 Spineboy 动画...</div>
+            </div>
+            <div class="canvas-container" id="canvas-container"></div>
+        </div>
+
+        <div class="sidebar-card">
+            <div class="control-panel">
+                <div class="panel-title">数据格式与版本</div>
+                <div class="stats-row">
+                    <span class="stats-label">加载格式:</span>
+                    <span class="stats-value">Binary (.skel)</span>
+                </div>
+                <div class="stats-row">
+                    <span class="stats-label">源文件版本:</span>
+                    <span class="stats-value">Spine v3.8.xx</span>
+                </div>
+                <div class="stats-row">
+                    <span class="stats-label">加载器动作:</span>
+                    <span class="stats-value"><span class="badge-legacy">Autodetect & Render</span></span>
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <div class="panel-title">动画状态控制器</div>
+                <div class="btn-group" id="animations">
+                    <button class="btn btn-play active" onclick="playAnim('idle')">Idle (空闲)</button>
+                    <button class="btn btn-play" onclick="playAnim('walk')">Walk (行走)</button>
+                    <button class="btn btn-play" onclick="playAnim('run')">Run (奔跑)</button>
+                    <button class="btn btn-play" onclick="playAnim('jump')">Jump (起跳)</button>
+                    <button class="btn btn-play" onclick="playAnim('shoot')">Shoot (射击)</button>
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <div class="panel-title">调试选项</div>
+                <div class="btn-group">
+                    <button class="btn" id="btn-debug" onclick="toggleDebug()">开启骨骼调试线</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Load PixiJS 7.4.2 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.4.2/pixi.min.js"></script>
+    <!-- Load SimpleSpineNext Bundle -->
+    <script src="../dist/simplespine.js"></script>
+
+    <script>
+        let app;
+        let spineCharacter;
+        let spineDebug;
+        let debugEnabled = false;
+
+        async function initDemo() {
+            const container = document.getElementById('canvas-container');
+            
+            // 1. 初始化 PixiJS Application
+            app = new PIXI.Application({
+                width: container.clientWidth,
+                height: container.clientHeight,
+                backgroundColor: 0x0f1322,
+                antialias: true,
+                resizeTo: container
+            });
+            container.appendChild(app.view);
+
+            // 必须显式向 SimpleSpine 注册全局 PIXI 实例（非模块化规范下的兼容做法）
+            SimpleSpine.registerPIXI(PIXI);
+
+            try {
+                // 2. 加载 Spine v3.8 的二进制 (.skel) 资源
+                // 演示了 detectSpineVersion 对二进制格式的强识别与自动化解析处理
+                const res = await SimpleSpine.load('spineboy-pro.skel');
+                console.log("Spine Loaded Success:", res);
+
+                // 3. 创建 Spine 动画实例与骨骼调试渲染器
+                const spineInstanceObj = SimpleSpine.spine(res);
+                spineCharacter = spineInstanceObj.spine;
+                spineDebug = spineInstanceObj.debug;
+
+                // 4. 调整位置与缩放
+                spineCharacter.x = app.screen.width / 2;
+                spineCharacter.y = app.screen.height - 40;
+                spineCharacter.scale.set(0.6);
+
+                // 5. 将动画添加至场景舞台并默认播放 idle 状态
+                app.stage.addChild(spineCharacter);
+                spineCharacter.state.setAnimation(0, 'idle', true);
+
+                // 隐藏 Loading
+                document.getElementById('loading').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('loading').style.display = 'none';
+                }, 500);
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('loading-text').innerText = "加载失败：" + err.message;
+                document.getElementById('loading-text').style.color = "#ef4444";
+            }
+        }
+
+        // 切换播放动画
+        function playAnim(name) {
+            if (!spineCharacter) return;
+            spineCharacter.state.setAnimation(0, name, name !== 'jump' && name !== 'shoot');
+            if (name === 'jump' || name === 'shoot') {
+                spineCharacter.state.addAnimation(0, 'idle', true, 0);
+            }
+            
+            // 更新按钮激活状态
+            const buttons = document.querySelectorAll('#animations .btn');
+            buttons.forEach(btn => {
+                if (btn.innerText.toLowerCase().includes(name)) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        // 开启/关闭骨骼调试绘制
+        function toggleDebug() {
+            if (!spineCharacter || !spineDebug) return;
+            debugEnabled = !debugEnabled;
+            
+            const btn = document.getElementById('btn-debug');
+            if (debugEnabled) {
+                spineCharacter.debug = spineDebug;
+                btn.classList.add('active');
+                btn.innerText = "关闭骨骼调试线";
+            } else {
+                spineCharacter.debug = null;
+                btn.classList.remove('active');
+                btn.innerText = "开启骨骼调试线";
+            }
+        }
+
+        // 初始化演示项目
+        window.addEventListener('load', initDemo);
+    </script>
+</body>
+</html>
