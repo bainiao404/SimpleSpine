@@ -76,13 +76,27 @@
             pointer-events: none;
             transition: opacity 0.3s;
         }
+
+        select:hover {
+            border-color: #6366f1 !important;
+        }
     </style>
 </head>
 <body>
 
     <div class="controls-bar">
-        <span class="title">SimpleSpine Demo (Spineboy 3.8 .skel)</span>
-        <div class="btn-group" id="animations">
+        <span class="title">SimpleSpine Demo</span>
+        <div style="margin-left: 15px; display: flex; align-items: center;">
+            <label for="spine-version" style="color: #94a3b8; font-size: 14px; margin-right: 8px; font-weight: 500;">骨骼版本:</label>
+            <select id="spine-version" onchange="changeSpineVersion(this.value)" style="background: #1e293b; color: #fff; border: 1px solid #475569; padding: 6px 12px; border-radius: 6px; outline: none; cursor: pointer; font-size: 14px; font-weight: 500; transition: border-color 0.2s;">
+                <option value="3.8-skel">Spine v3.8 Binary (.skel)</option>
+                <option value="3.8-json">Spine v3.8 JSON (.json)</option>
+                <option value="4.0-skel">Spine v4.0 Binary (.skel)</option>
+                <option value="4.1-skel">Spine v4.1 Binary (.skel)</option>
+                <option value="4.2-skel">Spine v4.2 Binary (.skel)</option>
+            </select>
+        </div>
+        <div style="margin-left: 20px;" class="btn-group" id="animations">
             <button class="btn active" onclick="playAnim('idle')">Idle (空闲)</button>
             <button class="btn" onclick="playAnim('walk')">Walk (行走)</button>
             <button class="btn" onclick="playAnim('run')">Run (奔跑)</button>
@@ -126,10 +140,42 @@
             // 必须显式向 SimpleSpine 注册全局 PIXI 实例
             SimpleSpine.registerPIXI(PIXI);
 
+            // 2. 加载当前选中的骨骼版本
+            await changeSpineVersion(document.getElementById('spine-version').value);
+        }
+
+        async function changeSpineVersion(value) {
+            if (spineCharacter) {
+                app.stage.removeChild(spineCharacter);
+                spineCharacter.destroy({ children: true });
+                spineCharacter = null;
+            }
+            if (spineDebug && debugEnabled) {
+                toggleDebug();
+            }
+            spineDebug = null;
+
+            const loading = document.getElementById('loading');
+            loading.style.display = 'block';
+            loading.innerText = "正在载入并解析骨骼资源...";
+            loading.style.color = "#9ca3af";
+
+            let path;
+            if (value === '3.8-skel') {
+                path = 'assets/v3.8/spineboy-pro.skel';
+            } else if (value === '3.8-json') {
+                path = 'spineboy-pro.json';
+            } else if (value === '4.0-skel') {
+                path = 'assets/v4.0/spineboy-pro.skel';
+            } else if (value === '4.1-skel') {
+                path = 'assets/v4.1/spineboy-pro.skel';
+            } else if (value === '4.2-skel') {
+                path = 'assets/v4.2/spineboy-pro.skel';
+            }
+
             try {
-                // 2. 加载 Spine v3.8 二进制 (.skel) 资源
-                const res = await SimpleSpine.load('spineboy-pro.skel');
-                console.log("Spine Loaded Success:", res);
+                const res = await SimpleSpine.load(path);
+                console.log(`Spine ${value} Loaded Success:`, res);
 
                 // 3. 创建 Spine 动画实例与骨骼调试渲染器
                 const spineInstanceObj = SimpleSpine.spine(res);
@@ -141,18 +187,20 @@
                 spineCharacter.y = app.screen.height - 40;
                 spineCharacter.scale.set(0.6);
 
-                // 5. 将动画添加至舞台并默认播放 idle 状态
+                // 5. 将动画添加至舞台
                 app.stage.addChild(spineCharacter);
                 
-                // 解决正在载入的文字
-                document.getElementById('loading').style.display = 'none';
+                loading.style.display = 'none';
+
+                if (debugEnabled) {
+                    spineCharacter.debug = spineDebug;
+                }
 
                 // 6. 播放 Idle 动画
                 playAnim('idle');
 
             } catch (err) {
                 console.error(err);
-                const loading = document.getElementById('loading');
                 loading.innerText = "加载失败：" + err.message;
                 loading.style.color = "#ef4444";
             }

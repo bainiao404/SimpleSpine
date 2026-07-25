@@ -29,7 +29,7 @@ export function detectSpineVersion(version: string): SPINE_VERSION {
     if (ver3 === '4.1') {
         return SPINE_VERSION.VER41;
     }
-    if (ver3 === '4.2') {
+    if (ver3 === '4.2' || ver3 === '4.3') {
         return SPINE_VERSION.VER42;
     }
     // try parse old versions with 3.7

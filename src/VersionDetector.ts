@@ -19,6 +19,7 @@ export const versionMap: Record<number, VersionConfig> = {
     40: { target: '40', handler: null },
     41: { target: '41', handler: null },
     42: { target: '42', handler: null },
+    43: { target: '42', handler: null },
 };
 
 /**
@@ -55,8 +56,9 @@ export function isVersion(str: any): string | null {
     if (typeof str === 'string') {
         const list: [number, string][] = [
             [9, '4.0'],
-            [8, '4.1'],
+            [9, '4.1'],
             [9, '4.2'],
+            [9, '4.3'],
             [29, '3.8'],
             [29, '3.7'],
             [29, '3.6'],

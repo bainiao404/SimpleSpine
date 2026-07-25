@@ -258,7 +258,7 @@ export async function readSpineSpineData(config: any): Promise<any> {
         for (const page of spineAtlas.pages) {
             const found = textureData.find((t: any) => t.name === page.name);
             if (found) {
-                page.setTexture(spineSdk.SpineTexture.from(found.texture));
+                page.setTexture(spineSdk.SpineTexture.from(found.texture.source));
             }
         }
     }
@@ -431,10 +431,10 @@ export function spine(spineData: any): any {
         throw new Error('未加载 PIXI.spine 插件或未通过 registerPIXI() 注册');
     }
 
-    const isV42 = spineData.version === '42' || spineData.version === 42;
+    const isV42 = spineData.version === '42' || spineData.version === 42 || spineData.version === '43' || spineData.version === 43;
     const sdk = isV42 ? pixi.spine.spine42 : pixi.spine;
 
-    const spineInstance = isV42 ? new sdk.Spine({ skeletonData: spineData.spine }) : new sdk.Spine(spineData.spine);
+    const spineInstance = new sdk.Spine(spineData.spine);
 
     const debugRenderer = new sdk.SpineDebugRenderer();
 
