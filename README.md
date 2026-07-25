@@ -7,6 +7,9 @@
   <img src="https://img.shields.io/badge/TypeScript-Strict-blue.svg?style=flat-square" alt="TypeScript">
 </p>
 
+> [!IMPORTANT]
+> **PixiJS v8 用户注意**：当前分支仅适用于 **PixiJS v7** 环境。如果您使用的是 **PixiJS v8**，请跳转使用 **[pixi8](https://github.com/bainiao404/SimpleSpine/tree/pixi8)** 分支。
+
 **SimpleSpine** 是面向 PixiJS v7 的多版本 Spine 动画兼容适配与加载封装库。
 
 该项目旨在解决多版本 Spine 骨骼资源在前端加载时的版本冲突与 API 兼容问题。支持对 **Spine v2.1 至 v4.2** 导出的骨骼数据（包括 `.skel` 二进制及 `.json` 文本格式）进行**自动版本识别**与**向下兼容性转换**，为上层应用提供统一的调用接口。
