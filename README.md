@@ -7,20 +7,20 @@
   <img src="https://img.shields.io/badge/TypeScript-Strict-blue.svg?style=flat-square" alt="TypeScript">
 </p>
 
-**SimpleSpineNext** 是一个面向 PixiJS v7 的轻量级、高性能且健壮的 Spine 动画加载与版本适配器封装库。
+**SimpleSpineNext** 是面向 PixiJS v7 的多版本 Spine 动画兼容适配与加载封装库。
 
-它核心解决了多版本 Spine 资源在前端加载冲突的问题，能够对 **Spine v2.1 ~ v4.2** 导出的骨骼数据（无论是 `.skel` 二进制格式还是 `.json` 文本格式）进行**自动版本检测**与**平滑版本转换适配**，并提供一套简明一致的统一调用接口。
+该项目旨在解决多版本 Spine 骨骼资源在前端加载时的版本冲突与 API 兼容问题。支持对 **Spine v2.1 至 v4.2** 导出的骨骼数据（包括 `.skel` 二进制及 `.json` 文本格式）进行**自动版本识别**与**向下兼容性转换**，为上层应用提供统一的调用接口。
 
 ---
 
-## 核心特性
+## 主要功能
 
-- **自动版本检测 (Autodetect)**：根据骨骼数据的二进制魔数或 JSON 头信息，全自动分析出源文件 Spine 版本。
-- **平滑向下兼容适配**：内置 legacy-to-v3.8 规范化适配层（如 skins 转 array、斜切角度和曲线拟合修正、skinnedmesh 向上兼容转换），免去频繁重导老旧美术资源的烦恼。
-- **直接消费内存数据 (Memory Load)**：全新支持直接传入已读入内存的 `ArrayBuffer`、`string` 或 `object` 进行脱网加载，极大方便了本地文件拖拽预览、网络预载集成以及端侧加密数据解密后直接加载的特殊场景。
-- **彻底去全局 window 依赖 (SSR / Test Friendly)**：解耦对 `window.PIXI` 的直接引用。提供 `registerPIXI()` 注册器，支持在无浏览器环境（如 Node.js 单元测试、SSR 服务端渲染）中无缝运行。
-- **TypeScript 强类型支持**：所有模块均使用 TypeScript 进行了完全重构，提供完整、详尽 of 的类型声明与代码自动补全。
-- **Esbuild 高效构建**：底层基于 Esbuild 实施秒级打包编译，同时导出 ESM 规范的 `.mjs` 模块与支持直接在浏览器 `<script>` 导入 the IIFE 全局对象 `.js`（已处理 esbuild 互操作代理以无缝共享网页全局的 `PIXI` 单例）。
+- **版本自动识别 (Autodetect)**：解析骨骼数据的二进制魔数或 JSON 字段头部，自动识别源文件的 Spine 软件导出版本。
+- **向下兼容性数据适配**：内置 legacy-to-v3.8 数据规范化逻辑（包括 `skins` 对象转换为数组结构、斜切剪切角与动画曲线拟合转换、遗留 `skinnedmesh` 到新版 `mesh` 类型的适配转换），无需重新导出历史骨骼资源。
+- **支持非网络流式数据源 (Memory Load)**：支持直接加载内存中的 `ArrayBuffer`、`string` 或已解析的 `object`，满足本地拖拽预览、自定义资源加载管理及解密二进制流数据加载等使用场景。
+- **无全局 window 依赖**：解耦代码中对全局 `window.PIXI` 的直接依赖，提供 `registerPIXI(pixi)` 注册接口，支持在 Node.js 测试环境、服务端渲染 (SSR) 等无全局 `window` 对象的环境运行。
+- **TypeScript 类型支持**：使用 TypeScript 重构全部核心逻辑，提供完整的类型定义，保证强类型推导和代码补全。
+- **多端产物编译**：基于 Esbuild 构建工具输出 ESM 规范文件 (`.mjs`) 与浏览器直接引用的 IIFE 文件 (`.js`)。针对浏览器全局环境，通过打包期 Proxy 映射插件解决了多组件环境下 `@pixi/*` 原生引用与全局 `PIXI` 实例的命名空间隔离与同步问题。
 
 ---
 
@@ -39,14 +39,14 @@ npm run build
 ```
 
 编译产物包括：
-- `dist/simplespine.js`：适合浏览器脚本引入的 IIFE 库 file（全局暴露 `SimpleSpine` 对象）。
+- `dist/simplespine.js`：适合在浏览器中使用 `<script>` 标签直接引入的 IIFE 格式文件（全局暴露 `SimpleSpine` 命名空间）。
 - `dist/simplespine.mjs`：适合 Vite / Webpack / ESM 模块化打包工具链的现代 ESM 包。
 
 ---
 
-## 快速上手
+## 使用示例
 
-### 方式一：传统网络加载 (XHR Load)
+### 1. 远程网络资源加载
 
 通过指定骨骼资源的路径，加载器将并发自动拉取对应的 `.atlas` 和 `.png` 纹理集。
 
@@ -78,9 +78,9 @@ async function initSpine() {
 }
 ```
 
-### 方式二：直接消费内存数据 (Memory Load)
+### 2. 内存数据直接加载
 
-若您已经通过其他管理器或在离线环境下读取了资源内容，可直接传入 `MemorySpineSource` 结构进行“零网络 IO”渲染。
+对于已在运行期加载到内存中的资源，可直接传入 `MemorySpineSource` 结构实现零网络 IO 渲染。
 
 ```javascript
 // 假设已从本地拖拽或加密接口拉取到数据
@@ -97,7 +97,7 @@ const { spine: spineCharacter } = SimpleSpine.spine(spineData);
 app.stage.addChild(spineCharacter);
 ```
 
-### 方式三：开启调试绘制线
+### 3. 骨骼调试线绘制
 
 ```javascript
 const { spine, debug } = SimpleSpine.spine(spineData);
