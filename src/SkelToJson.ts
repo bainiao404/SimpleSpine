@@ -30,7 +30,7 @@ export function normalizeTo38(obj: SpineSkeletonData): SpineSkeletonData {
                 }
             }
             return { name, attachments };
-        });
+        }) as any;
     }
 
     // 3. 处理 Bones

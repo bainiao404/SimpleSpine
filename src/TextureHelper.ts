@@ -49,7 +49,7 @@ export function isPremultiplied(baseTexture: any): boolean {
 
     if (resource.source) {
         const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d', { premultiplyAlpha: 'none' as any }); // Cast as any if TS complains
+        const ctx = canvas.getContext('2d', { premultiplyAlpha: 'none' as any }) as CanvasRenderingContext2D;
         if (!ctx) return false;
         canvas.width = targetTexture.width;
         canvas.height = targetTexture.height;

@@ -40,7 +40,7 @@ import { PathConstraintData, SpacingMode } from './PathConstraintData';
 import { Skin } from './Skin';
 import { EventData } from './EventData';
 import { AttachmentType, BinaryInput, Color, PositionMode, Utils } from '@pixi-spine/base';
-import { BLEND_MODES } from '@pixi/core';
+import { BLEND_MODES } from '@pixi-spine/base';
 
 /** Loads skeleton data in the Spine binary format.
  *

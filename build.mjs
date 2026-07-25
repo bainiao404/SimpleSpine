@@ -33,7 +33,7 @@ const aliases = {
 const pixiGlobalsPlugin = {
   name: 'pixi-globals',
   setup(build) {
-    build.onResolve({ filter: /^@pixi\// }, args => {
+    build.onResolve({ filter: /^(pixi\.js|@pixi\/)/ }, args => {
       return { path: args.path, namespace: 'pixi-globals' };
     });
     build.onLoad({ filter: /.*/, namespace: 'pixi-globals' }, args => {
@@ -99,7 +99,7 @@ async function build() {
   await esbuild.build({
     ...baseConfig,
     format: 'esm',
-    external: ['@pixi/*'],
+    external: ['pixi.js', '@pixi/*'],
     outfile: 'dist/simplespine.mjs',
   });
   console.log('✓ Created ESM Bundle: dist/simplespine.mjs');

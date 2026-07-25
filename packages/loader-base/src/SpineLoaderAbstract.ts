@@ -1,5 +1,4 @@
-import { AssetExtension, checkExtension, Loader, LoaderParserPriority, ResolvedAsset } from '@pixi/assets';
-import { BaseTexture, extensions, ExtensionType, settings, Texture, utils } from '@pixi/core';
+import { ExtensionType, LoaderParserPriority, path, extensions, Texture, Loader, TextureSource as BaseTexture } from 'pixi.js';
 import { makeSpineTextureAtlasLoaderFunctionFromPixiLoaderObject } from './atlasLoader';
 import { ISkeletonData, ISkeletonParser, TextureAtlas } from '@pixi-spine/base';
 
@@ -13,6 +12,10 @@ function isJson(resource: unknown): resource is SPINEJSON {
 function isBuffer(resource: unknown): resource is SPINEBINARY {
     return resource instanceof ArrayBuffer;
 }
+
+const checkExtension = (url: string, ext: string) => {
+    return url && url.split('?')[0].split('#')[0].endsWith(ext);
+};
 
 /**
  * This abstract class is used to create a spine loader specifically for a needed version
@@ -31,117 +34,105 @@ export abstract class SpineLoaderAbstract<SKD extends ISkeletonData> {
         // eslint-disable-next-line @typescript-eslint/no-this-alias
         console.log('installLoader');
         const spineAdapter = this;
-        const spineLoaderExtension: AssetExtension<SPINEJSON | SPINEBINARY | ISpineResource<SKD>, ISpineMetadata> = {
-            extension: ExtensionType.Asset,
+        const spineLoaderExtension = {
+            extension: {
+                type: ExtensionType.LoadParser,
+                priority: LoaderParserPriority.Normal,
+                name: 'spine-loader',
+            },
 
-            loader: {
-                extension: {
-                    type: ExtensionType.LoadParser,
-                    priority: LoaderParserPriority.Normal,
-                },
+            // #region Downloading skel buffer data
+            test(url: string) {
+                return checkExtension(url, '.skel');
+            },
 
-                // #region Downloading skel buffer data
-                test(url) {
-                    return checkExtension(url, '.skel');
-                },
+            async load(url: string): Promise<ArrayBuffer> {
+                const response = await fetch(url);
+                const buffer = await response.arrayBuffer();
+                return buffer;
+            },
+            // #endregion
 
-                async load<SPINEBINARY>(url: string): Promise<SPINEBINARY> {
-                    const response = await settings.ADAPTER.fetch(url);
+            // #region Parsing spine data
+            testParse(asset: unknown, options: any): Promise<boolean> {
+                const isJsonSpineModel = checkExtension(options.src, '.json') && isJson(asset);
+                const isBinarySpineModel = checkExtension(options.src, '.skel') && isBuffer(asset);
 
-                    const buffer = await response.arrayBuffer();
+                // From 6.x loader. If the atlas is strictly false we bail
+                const isMetadataAngry = options.data?.spineAtlas === false;
 
-                    return buffer as SPINEBINARY;
-                },
-                // #endregion
+                return Promise.resolve((isJsonSpineModel && !isMetadataAngry) || isBinarySpineModel);
+            },
 
-                // #region Parsing spine data
-                testParse(asset: unknown, options: ResolvedAsset): Promise<boolean> {
-                    const isJsonSpineModel = checkExtension(options.src, '.json') && isJson(asset);
-                    const isBinarySpineModel = checkExtension(options.src, '.skel') && isBuffer(asset);
+            async parse(asset: SPINEJSON | SPINEBINARY, loadAsset: any, loader: any): Promise<ISpineResource<SKD>> {
+                const fileExt = path.extname(loadAsset.src).toLowerCase();
+                const fileName = path.basename(loadAsset.src, fileExt);
+                let basePath = path.dirname(loadAsset.src);
 
-                    // From 6.x loader. If the atlas is strictly false we bail
-                    const isMetadataAngry = options.data?.spineAtlas === false;
+                if (basePath && basePath.lastIndexOf('/') !== basePath.length - 1) {
+                    basePath += '/';
+                }
 
-                    return Promise.resolve((isJsonSpineModel && !isMetadataAngry) || isBinarySpineModel);
-                },
+                const isJsonSpineModel = checkExtension(loadAsset.src, '.json') && isJson(asset);
 
-                async parse(asset: SPINEJSON | SPINEBINARY, loadAsset, loader): Promise<ISpineResource<SKD>> {
-                    const fileExt = utils.path.extname(loadAsset.src).toLowerCase();
-                    const fileName = utils.path.basename(loadAsset.src, fileExt);
-                    let basePath = utils.path.dirname(loadAsset.src);
+                let parser: ISkeletonParser = null;
+                let dataToParse = asset;
 
-                    if (basePath && basePath.lastIndexOf('/') !== basePath.length - 1) {
-                        basePath += '/';
-                    }
+                if (isJsonSpineModel) {
+                    parser = spineAdapter.createJsonParser();
+                } else {
+                    parser = spineAdapter.createBinaryParser();
+                    dataToParse = new Uint8Array(asset);
+                }
 
-                    const isJsonSpineModel = checkExtension(loadAsset.src, '.json') && isJson(asset);
-                    // const isBinarySpineModel = fileExt === 'slel' && isBuffer(asset);
+                const metadata = (loadAsset.data || {}) as ISpineMetadata;
+                const metadataSkeletonScale = metadata?.spineSkeletonScale ?? null;
 
-                    let parser: ISkeletonParser = null;
-                    let dataToParse = asset;
+                if (metadataSkeletonScale) {
+                    parser.scale = metadataSkeletonScale;
+                }
 
-                    if (isJsonSpineModel) {
-                        parser = spineAdapter.createJsonParser();
-                    } else {
-                        parser = spineAdapter.createBinaryParser();
-                        dataToParse = new Uint8Array(asset);
-                    }
+                // if metadataAtlas is a TextureAtlas, use it directly
+                const metadataAtlas: TextureAtlas = metadata.spineAtlas as TextureAtlas;
 
-                    const metadata = (loadAsset.data || {}) as ISpineMetadata;
-                    const metadataSkeletonScale = metadata?.spineSkeletonScale ?? null;
+                if (metadataAtlas && metadataAtlas.pages) {
+                    return spineAdapter.parseData(parser, metadataAtlas, dataToParse);
+                }
 
-                    if (metadataSkeletonScale) {
-                        parser.scale = metadataSkeletonScale;
-                    }
+                // if for some odd reason, you dumped the text information of the atlas into the metadata...
+                const textAtlas = metadata.atlasRawData;
 
-                    // if metadataAtlas is a TextureAtlas, use it directly
-                    const metadataAtlas: TextureAtlas = metadata.spineAtlas as TextureAtlas;
-
-                    if (metadataAtlas && metadataAtlas.pages) {
-                        return spineAdapter.parseData(parser, metadataAtlas, dataToParse);
-                    }
-
-                    // if for some odd reason, you dumped the text information of the atlas into the metadata...
-                    const textAtlas = metadata.atlasRawData;
-
-                    if (textAtlas) {
-                        let auxResolve = null;
-                        let auxReject = null;
-                        const atlasPromise = new Promise<TextureAtlas>((resolve, reject) => {
-                            auxResolve = resolve;
-                            auxReject = reject;
-                        });
-                        const atlas = new TextureAtlas(textAtlas, makeSpineTextureAtlasLoaderFunctionFromPixiLoaderObject(loader, basePath, metadata.imageMetadata), (newAtlas) => {
-                            if (!newAtlas) {
-                                auxReject('Something went terribly wrong loading a spine .atlas file\nMost likely your texture failed to load.');
-                            }
-                            auxResolve(atlas);
-                        });
-                        const textureAtlas = await atlasPromise;
-
-                        return spineAdapter.parseData(parser, textureAtlas, dataToParse);
-                    }
-
-                    // Maybe you told us where to find the file? (I sure hope you remembered to add the .atlas extension)
-                    let atlasPath = metadata.spineAtlasFile;
-
-                    // Finally, if no information at all about the atlas, we guess the atlas file name
-                    if (!atlasPath) {
-                        atlasPath = `${basePath + fileName}.atlas`;
-                    }
-
-                    const textureAtlas = await loader.load<TextureAtlas>({ src: atlasPath, data: metadata, alias: metadata.spineAtlasAlias });
+                if (textAtlas) {
+                    let auxResolve = null;
+                    let auxReject = null;
+                    const atlasPromise = new Promise<TextureAtlas>((resolve, reject) => {
+                        auxResolve = resolve;
+                        auxReject = reject;
+                    });
+                    const atlas = new TextureAtlas(textAtlas, makeSpineTextureAtlasLoaderFunctionFromPixiLoaderObject(loader, basePath, metadata.imageMetadata), (newAtlas) => {
+                        if (!newAtlas) {
+                            auxReject('Something went terribly wrong loading a spine .atlas file\nMost likely your texture failed to load.');
+                        }
+                        auxResolve(atlas);
+                    });
+                    const textureAtlas = await atlasPromise;
 
                     return spineAdapter.parseData(parser, textureAtlas, dataToParse);
-                },
+                }
 
-                // #endregion
+                // Maybe you told us where to find the file? (I sure hope you remembered to add the .atlas extension)
+                let atlasPath = metadata.spineAtlasFile;
 
-                // unload(asset: ISpineResource<SKD>, loadAsset, loader) {
-                // 	???
-                // },
+                // Finally, if no information at all about the atlas, we guess the atlas file name
+                if (!atlasPath) {
+                    atlasPath = `${basePath + fileName}.atlas`;
+                }
+
+                const textureAtlas = await loader.load({ src: atlasPath, data: metadata, alias: metadata.spineAtlasAlias });
+
+                return spineAdapter.parseData(parser, textureAtlas, dataToParse);
             },
-        } as AssetExtension<SPINEJSON | SPINEBINARY | ISpineResource<SKD>, ISpineMetadata>;
+        };
 
         extensions.add(spineLoaderExtension);
 

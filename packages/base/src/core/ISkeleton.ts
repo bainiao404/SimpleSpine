@@ -1,6 +1,16 @@
 import { Color, StringMap, Vector2 } from './Utils';
 
-import type { BLEND_MODES, Matrix } from '@pixi/core';
+import type { Matrix } from 'pixi.js';
+
+/**
+ * @public
+ */
+export enum BLEND_MODES {
+    NORMAL = 0,
+    ADD = 1,
+    MULTIPLY = 2,
+    SCREEN = 3
+}
 import type { AttachmentType } from './AttachmentType';
 import type { IAnimation, IEventData } from './IAnimation';
 import type { IIkConstraintData, IPathConstraintData, ITransformConstraintData } from './IConstraint';

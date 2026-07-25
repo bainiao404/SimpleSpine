@@ -588,7 +588,7 @@ export function readAnimation(
             const name = eventKeys[input.readVarint(true)];
             const eventData = skeletonData.events[name];
             const event = {
-                int: input.readVarint(0),
+                int: input.readVarint(false),
                 float: input.readFloat(),
                 string: input.readBoolean() ? input.readString() : (eventData ? eventData.stringValue : ''),
                 time: time,

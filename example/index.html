@@ -98,8 +98,8 @@
         <div id="canvas-container" style="width: 100%; height: 100%;"></div>
     </div>
 
-    <!-- Load PixiJS 7.4.2 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.4.2/pixi.min.js"></script>
+    <!-- Load PixiJS v8 -->
+    <script src="./pixi.min.js"></script>
     <!-- Load SimpleSpine Bundle -->
     <script src="../dist/simplespine.js"></script>
 
@@ -112,15 +112,16 @@
         async function initDemo() {
             const container = document.getElementById('canvas-container');
             
-            // 1. 初始化 PixiJS Application
-            app = new PIXI.Application({
+            // 1. 初始化 PixiJS Application (v8 asynchronous API)
+            app = new PIXI.Application();
+            await app.init({
                 width: container.clientWidth,
                 height: container.clientHeight,
                 backgroundColor: 0x0f1322,
                 antialias: true,
                 resizeTo: container
             });
-            container.appendChild(app.view);
+            container.appendChild(app.canvas);
 
             // 必须显式向 SimpleSpine 注册全局 PIXI 实例
             SimpleSpine.registerPIXI(PIXI);
@@ -142,14 +143,12 @@
 
                 // 5. 将动画添加至舞台并默认播放 idle 状态
                 app.stage.addChild(spineCharacter);
-                spineCharacter.state.setAnimation(0, 'idle', true);
+                
+                // 解决正在载入的文字
+                document.getElementById('loading').style.display = 'none';
 
-                // 隐藏 Loading
-                const loading = document.getElementById('loading');
-                loading.style.opacity = '0';
-                setTimeout(() => {
-                    loading.style.display = 'none';
-                }, 300);
+                // 6. 播放 Idle 动画
+                playAnim('idle');
 
             } catch (err) {
                 console.error(err);
@@ -159,23 +158,26 @@
             }
         }
 
-        // 切换播放动画
+        // 播放特定动画逻辑
         function playAnim(name) {
             if (!spineCharacter) return;
-            spineCharacter.state.setAnimation(0, name, name !== 'jump' && name !== 'shoot');
-            if (name === 'jump' || name === 'shoot') {
-                spineCharacter.state.addAnimation(0, 'idle', true, 0);
+            try {
+                // 清理所有轨道并播放新动画
+                spineCharacter.state.setAnimation(0, name, true);
+                
+                // 更新按钮高亮状态
+                const btns = document.querySelectorAll('.btn-group .btn');
+                btns.forEach(btn => {
+                    const text = btn.innerText.toLowerCase();
+                    if (text.includes(name)) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+            } catch (e) {
+                console.error(e);
             }
-            
-            // 更新按钮激活状态
-            const buttons = document.querySelectorAll('#animations .btn');
-            buttons.forEach(btn => {
-                if (btn.innerText.toLowerCase().includes(name)) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
-            });
         }
 
         // 开启/关闭骨骼调试绘制
@@ -196,7 +198,7 @@
         }
 
         // 初始化演示项目
-        window.addEventListener('load', initDemo);
+        window.addEventListener('DOMContentLoaded', initDemo);
     </script>
 </body>
 </html>

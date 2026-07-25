@@ -1,4 +1,4 @@
-import * as spine42 from '@esotericsoftware/spine-pixi-v7';
+import * as spine42 from '@esotericsoftware/spine-pixi-v8';
 import { detectSpineVersion, IAnimationState, IAnimationStateData, ISkeleton, ISkeletonData, Physics, SPINE_VERSION, SpineBase } from '@pixi-spine/base';
 import * as spine37 from '@pixi-spine/runtime-3.7';
 import * as spine38 from '@pixi-spine/runtime-3.8';

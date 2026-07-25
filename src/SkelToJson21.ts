@@ -152,7 +152,7 @@ export function readSkeletonData21(binary: ArrayBuffer): SpineSkeletonData {
     for (let i = 0; i < eventsCount; ++i) {
         const name = input.readString() || '';
         const eventData = {
-            intValue: input.readVarint(0),
+            intValue: input.readVarint(false),
             floatValue: input.readFloat(),
             stringValue: input.readString() || undefined,
         };
@@ -589,7 +589,7 @@ function readAnimation21(input: BinaryInput, skeletonData: SpineSkeletonData, sk
             const time = input.readFloat();
             const name = eventKeys[input.readVarint(true)];
             const event = {
-                int: input.readVarint(0),
+                int: input.readVarint(false),
                 float: input.readFloat(),
                 string: input.readBoolean() ? input.readString() : name,
                 time: time,

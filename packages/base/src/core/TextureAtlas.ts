@@ -1,7 +1,7 @@
-import { ALPHA_MODES, MIPMAP_MODES, Rectangle, SCALE_MODES, Texture } from '@pixi/core';
+import { Rectangle, Texture } from 'pixi.js';
 import { filterFromString, TextureFilter, TextureRegion, TextureWrap } from './TextureRegion';
 
-import type { BaseTexture } from '@pixi/core';
+import type { TextureSource as BaseTexture } from 'pixi.js';
 import type { Disposable, StringMap } from './Utils';
 
 class RegionFields {
@@ -34,7 +34,7 @@ export class TextureAtlas implements Disposable {
         let page: TextureAtlasPage = null;
 
         for (let i = 0; i < pages.length; i++) {
-            if (pages[i].baseTexture === texture.baseTexture) {
+            if (pages[i].baseTexture === texture.source) {
                 page = pages[i];
                 break;
             }
@@ -42,10 +42,10 @@ export class TextureAtlas implements Disposable {
         if (page === null) {
             page = new TextureAtlasPage();
             page.name = 'texturePage';
-            const baseTexture = texture.baseTexture;
+            const baseTexture = texture.source;
 
-            page.width = baseTexture.realWidth;
-            page.height = baseTexture.realHeight;
+            page.width = baseTexture.width;
+            page.height = baseTexture.height;
             page.baseTexture = baseTexture;
             // those fields are not relevant in Pixi
             page.minFilter = page.magFilter = TextureFilter.Nearest;
@@ -190,25 +190,26 @@ export class TextureAtlas implements Disposable {
                     }
                     this.pages.push(page);
 
-                    textureLoader(page.name, (texture: BaseTexture) => {
+                    textureLoader(page.name, (texture: any) => {
                         if (texture === null) {
                             this.pages.splice(this.pages.indexOf(page), 1);
 
                             return callback && callback(null);
                         }
-                        page.baseTexture = texture;
+                        const source = texture.source || texture;
+                        page.baseTexture = source;
                         // TODO: set scaleMode and mipmapMode from spine
                         if (page.pma) {
-                            texture.alphaMode = ALPHA_MODES.PMA;
+                            source.alphaMode = 'premultiplied-alpha';
                         }
                         if (!texture.valid) {
-                            texture.setSize(page.width, page.height);
+                            source.resize(page.width, page.height);
                         }
                         page.setFilters();
 
                         if (!page.width || !page.height) {
-                            page.width = texture.realWidth;
-                            page.height = texture.realHeight;
+                            page.width = source.width;
+                            page.height = source.height;
                             if (!page.width || !page.height) {
                                 console.log(
                                     `ERROR spine atlas page ${page.name}: meshes wont work if you dont specify size in atlas (http://www.html5gamedevs.com/topic/18888-pixi-spines-and-meshes/?p=107121)`
@@ -271,7 +272,13 @@ export class TextureAtlas implements Disposable {
                     const orig = new Rectangle(0, 0, region.originalWidth, region.originalHeight);
                     const trim = new Rectangle(region.offsetX, region.originalHeight - region.height - region.offsetY, region.width, region.height);
 
-                    atlasRegion.texture = new Texture(atlasRegion.page.baseTexture, frame, orig, trim, region.rotate);
+                    atlasRegion.texture = new Texture({
+                        source: atlasRegion.page.baseTexture,
+                        frame,
+                        orig,
+                        trim,
+                        rotate: region.rotate
+                    });
                     atlasRegion.index = region.index;
                     atlasRegion.texture.updateUvs();
 
@@ -295,7 +302,7 @@ export class TextureAtlas implements Disposable {
 
     dispose() {
         for (let i = 0; i < this.pages.length; i++) {
-            this.pages[i].baseTexture.dispose();
+            this.pages[i].baseTexture.destroy();
         }
     }
 }
@@ -362,15 +369,15 @@ export class TextureAtlasPage {
         const filter = this.minFilter;
 
         if (filter == TextureFilter.Linear) {
-            tex.scaleMode = SCALE_MODES.LINEAR;
+            tex.scaleMode = 'linear';
         } else if (this.minFilter == TextureFilter.Nearest) {
-            tex.scaleMode = SCALE_MODES.NEAREST;
+            tex.scaleMode = 'nearest';
         } else {
-            tex.mipmap = MIPMAP_MODES.POW2;
+            tex.autoGenerateMipmaps = true;
             if (filter == TextureFilter.MipMapNearestNearest) {
-                tex.scaleMode = SCALE_MODES.NEAREST;
+                tex.scaleMode = 'nearest';
             } else {
-                tex.scaleMode = SCALE_MODES.LINEAR;
+                tex.scaleMode = 'linear';
             }
         }
     }

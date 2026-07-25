@@ -1,4 +1,4 @@
-import type { Texture, Rectangle } from '@pixi/core';
+import type { Texture, Rectangle } from 'pixi.js';
 
 /**
  * @public

@@ -1,5 +1,4 @@
-import { Container } from '@pixi/display';
-import { Graphics } from '@pixi/graphics';
+import { Container, Graphics } from 'pixi.js';
 import type { IAnimationState, IAnimationStateData } from './core/IAnimation';
 import type { IClippingAttachment, IMeshAttachment, IRegionAttachment, ISkeleton, ISkeletonData, IVertexAttachment } from './core/ISkeleton';
 import type { SpineBase } from './SpineBase';
@@ -129,7 +128,7 @@ export class SpineDebugRenderer implements ISpineDebugRenderer {
         debugDisplayObjects.pathsLine.clear();
 
         for (let len = debugDisplayObjects.bones.children.length; len > 0; len--) {
-            debugDisplayObjects.bones.children[len - 1].destroy({ children: true, texture: true, baseTexture: true });
+            debugDisplayObjects.bones.children[len - 1].destroy({ children: true, texture: true });
         }
 
         const scale = spine.scale.x || spine.scale.y || 1;
@@ -171,8 +170,6 @@ export class SpineDebugRenderer implements ISpineDebugRenderer {
         const skeletonY = skeleton.y;
         const bones = skeleton.bones;
 
-        debugDisplayObjects.skeletonXY.lineStyle(lineWidth, this.skeletonXYColor, 1);
-
         for (let i = 0, len = bones.length; i < len; i++) {
             const bone = bones[i];
             const boneLen = bone.data.length;
@@ -186,23 +183,15 @@ export class SpineDebugRenderer implements ISpineDebugRenderer {
             }
 
             // Triangle calculation formula
-            // area: A=sqrt((a+b+c)*(-a+b+c)*(a-b+c)*(a+b-c))/4
-            // alpha: alpha=acos((pow(b, 2)+pow(c, 2)-pow(a, 2))/(2*b*c))
-            // beta: beta=acos((pow(a, 2)+pow(c, 2)-pow(b, 2))/(2*a*c))
-            // gamma: gamma=acos((pow(a, 2)+pow(b, 2)-pow(c, 2))/(2*a*b))
-
             const w = Math.abs(starX - endX);
             const h = Math.abs(starY - endY);
-            // a = w, // side length a
-            const a2 = Math.pow(w, 2); // square root of side length a
-            const b = h; // side length b
-            const b2 = Math.pow(h, 2); // square root of side length b
-            const c = Math.sqrt(a2 + b2); // side length c
-            const c2 = Math.pow(c, 2); // square root of side length c
+            const a2 = Math.pow(w, 2);
+            const b = h;
+            const b2 = Math.pow(h, 2);
+            const c = Math.sqrt(a2 + b2);
+            const c2 = Math.pow(c, 2);
             const rad = Math.PI / 180;
-            // A = Math.acos([a2 + c2 - b2] / [2 * a * c]) || 0, // Angle A
-            // C = Math.acos([a2 + b2 - c2] / [2 * a * b]) || 0, // C angle
-            const B = Math.acos((c2 + b2 - a2) / (2 * b * c)) || 0; // angle of corner B
+            const B = Math.acos((c2 + b2 - a2) / (2 * b * c)) || 0;
 
             if (c === 0) {
                 continue;
@@ -215,9 +204,7 @@ export class SpineDebugRenderer implements ISpineDebugRenderer {
             // draw bone
             const refRation = c / 50 / scale;
 
-            gp.beginFill(this.bonesColor, 1);
-            gp.drawPolygon(0, 0, 0 - refRation, c - refRation * 3, 0, c - refRation, 0 + refRation, c - refRation * 3);
-            gp.endFill();
+            gp.poly([0, 0, 0 - refRation, c - refRation * 3, 0, c - refRation, 0 + refRation, c - refRation * 3]).fill({ color: this.bonesColor, alpha: 1 });
             gp.x = starX;
             gp.y = starY;
             gp.pivot.y = c;
@@ -226,46 +213,39 @@ export class SpineDebugRenderer implements ISpineDebugRenderer {
             let rotation = 0;
 
             if (starX < endX && starY < endY) {
-                // bottom right
                 rotation = -B + 180 * rad;
             } else if (starX > endX && starY < endY) {
-                // bottom left
                 rotation = 180 * rad + B;
             } else if (starX > endX && starY > endY) {
-                // top left
                 rotation = -B;
             } else if (starX < endX && starY > endY) {
-                // bottom left
                 rotation = B;
             } else if (starY === endY && starX < endX) {
-                // To the right
                 rotation = 90 * rad;
             } else if (starY === endY && starX > endX) {
-                // go left
                 rotation = -90 * rad;
             } else if (starX === endX && starY < endY) {
-                // down
                 rotation = 180 * rad;
             } else if (starX === endX && starY > endY) {
-                // up
                 rotation = 0;
             }
             gp.rotation = rotation;
 
             // Draw the starting rotation point of the bone
-            gp.lineStyle(lineWidth + refRation / 2.4, this.bonesColor, 1);
-            gp.beginFill(0x000000, 0.6);
-            gp.drawCircle(0, c, refRation * 1.2);
-            gp.endFill();
+            gp.circle(0, c, refRation * 1.2)
+              .fill({ color: 0x000000, alpha: 0.6 })
+              .stroke({ width: lineWidth + refRation / 2.4, color: this.bonesColor, alpha: 1 });
         }
 
         // Draw the skeleton starting point "X" form
         const startDotSize = lineWidth * 3;
 
-        debugDisplayObjects.skeletonXY.moveTo(skeletonX - startDotSize, skeletonY - startDotSize);
-        debugDisplayObjects.skeletonXY.lineTo(skeletonX + startDotSize, skeletonY + startDotSize);
-        debugDisplayObjects.skeletonXY.moveTo(skeletonX + startDotSize, skeletonY - startDotSize);
-        debugDisplayObjects.skeletonXY.lineTo(skeletonX - startDotSize, skeletonY + startDotSize);
+        debugDisplayObjects.skeletonXY
+            .moveTo(skeletonX - startDotSize, skeletonY - startDotSize)
+            .lineTo(skeletonX + startDotSize, skeletonY + startDotSize)
+            .moveTo(skeletonX + startDotSize, skeletonY - startDotSize)
+            .lineTo(skeletonX - startDotSize, skeletonY + startDotSize)
+            .stroke({ width: lineWidth, color: this.skeletonXYColor, alpha: 1 });
     }
 
     private drawRegionAttachmentsFunc(
@@ -275,8 +255,7 @@ export class SpineDebugRenderer implements ISpineDebugRenderer {
     ): void {
         const skeleton = spine.skeleton;
         const slots = skeleton.slots;
-
-        debugDisplayObjects.regionAttachmentsShape.lineStyle(lineWidth, this.regionAttachmentsColor, 1);
+        let hasRegions = false;
 
         for (let i = 0, len = slots.length; i < len; i++) {
             const slot = slots[i];
@@ -296,7 +275,12 @@ export class SpineDebugRenderer implements ISpineDebugRenderer {
             if (regionAttachment.updateOffset) regionAttachment.updateOffset(); // We don't need this on all versions
 
             regionAttachment.computeWorldVertices(slot, vertices, 0, 2);
-            debugDisplayObjects.regionAttachmentsShape.drawPolygon(Array.from(vertices.slice(0, 8)));
+            debugDisplayObjects.regionAttachmentsShape.poly(Array.from(vertices.slice(0, 8)), true);
+            hasRegions = true;
+        }
+
+        if (hasRegions) {
+            debugDisplayObjects.regionAttachmentsShape.stroke({ width: lineWidth, color: this.regionAttachmentsColor, alpha: 1 });
         }
     }
 
@@ -307,9 +291,8 @@ export class SpineDebugRenderer implements ISpineDebugRenderer {
     ): void {
         const skeleton = spine.skeleton;
         const slots = skeleton.slots;
-
-        debugDisplayObjects.meshHullLine.lineStyle(lineWidth, this.meshHullColor, 1);
-        debugDisplayObjects.meshTrianglesLine.lineStyle(lineWidth, this.meshTrianglesColor, 1);
+        let hasHull = false;
+        let hasTriangles = false;
 
         for (let i = 0, len = slots.length; i < len; i++) {
             const slot = slots[i];
@@ -332,6 +315,7 @@ export class SpineDebugRenderer implements ISpineDebugRenderer {
             meshAttachment.computeWorldVertices(slot, 0, meshAttachment.worldVerticesLength, vertices, 0, 2);
             // draw the skinned mesh (triangle)
             if (this.drawMeshTriangles) {
+                hasTriangles = true;
                 for (let i = 0, len = triangles.length; i < len; i += 3) {
                     const v1 = triangles[i] * 2;
                     const v2 = triangles[i + 1] * 2;
@@ -345,6 +329,7 @@ export class SpineDebugRenderer implements ISpineDebugRenderer {
 
             // draw skin border
             if (this.drawMeshHull && hullLength > 0) {
+                hasHull = true;
                 hullLength = (hullLength >> 1) * 2;
                 let lastX = vertices[hullLength - 2];
                 let lastY = vertices[hullLength - 1];
@@ -360,13 +345,20 @@ export class SpineDebugRenderer implements ISpineDebugRenderer {
                 }
             }
         }
+
+        if (hasTriangles) {
+            debugDisplayObjects.meshTrianglesLine.stroke({ width: lineWidth, color: this.meshTrianglesColor, alpha: 1 });
+        }
+        if (hasHull) {
+            debugDisplayObjects.meshHullLine.stroke({ width: lineWidth, color: this.meshHullColor, alpha: 1 });
+        }
     }
 
     private drawClippingFunc(spine: SpineBase<ISkeleton, ISkeletonData, IAnimationState, IAnimationStateData>, debugDisplayObjects: DebugDisplayObjects, lineWidth: number): void {
         const skeleton = spine.skeleton;
         const slots = skeleton.slots;
+        let hasClipping = false;
 
-        debugDisplayObjects.clippingPolygon.lineStyle(lineWidth, this.clippingPolygonColor, 1);
         for (let i = 0, len = slots.length; i < len; i++) {
             const slot = slots[i];
 
@@ -385,7 +377,12 @@ export class SpineDebugRenderer implements ISpineDebugRenderer {
             const world = new Float32Array(nn);
 
             clippingAttachment.computeWorldVertices(slot, 0, nn, world, 0, 2);
-            debugDisplayObjects.clippingPolygon.drawPolygon(Array.from(world));
+            debugDisplayObjects.clippingPolygon.poly(Array.from(world), true);
+            hasClipping = true;
+        }
+
+        if (hasClipping) {
+            debugDisplayObjects.clippingPolygon.stroke({ width: lineWidth, color: this.clippingPolygonColor, alpha: 1 });
         }
     }
 
@@ -394,19 +391,14 @@ export class SpineDebugRenderer implements ISpineDebugRenderer {
         debugDisplayObjects: DebugDisplayObjects,
         lineWidth: number
     ): void {
-        // draw the total outline of the bounding box
-        debugDisplayObjects.boundingBoxesRect.lineStyle(lineWidth, this.boundingBoxesRectColor, 5);
-
         const bounds = new SkeletonBoundsBase();
 
         bounds.update(spine.skeleton, true);
-        debugDisplayObjects.boundingBoxesRect.drawRect(bounds.minX, bounds.minY, bounds.getWidth(), bounds.getHeight());
+        debugDisplayObjects.boundingBoxesRect.rect(bounds.minX, bounds.minY, bounds.getWidth(), bounds.getHeight())
+            .stroke({ width: lineWidth, color: this.boundingBoxesRectColor, alpha: 1 });
 
         const polygons = bounds.polygons;
         const drawPolygon = (polygonVertices: ArrayLike<number>, _offset: unknown, count: number): void => {
-            debugDisplayObjects.boundingBoxesPolygon.lineStyle(lineWidth, this.boundingBoxesPolygonColor, 1);
-            debugDisplayObjects.boundingBoxesPolygon.beginFill(this.boundingBoxesPolygonColor, 0.1);
-
             if (count < 3) {
                 throw new Error('Polygon must contain at least 3 vertices');
             }
@@ -418,17 +410,15 @@ export class SpineDebugRenderer implements ISpineDebugRenderer {
                 const y1 = polygonVertices[i + 1];
 
                 // draw the bounding box node
-                debugDisplayObjects.boundingBoxesCircle.lineStyle(0);
-                debugDisplayObjects.boundingBoxesCircle.beginFill(this.boundingBoxesCircleColor);
-                debugDisplayObjects.boundingBoxesCircle.drawCircle(x1, y1, dotSize);
-                debugDisplayObjects.boundingBoxesCircle.endFill();
+                debugDisplayObjects.boundingBoxesCircle.circle(x1, y1, dotSize).fill({ color: this.boundingBoxesCircleColor });
 
                 paths.push(x1, y1);
             }
 
             // draw the bounding box area
-            debugDisplayObjects.boundingBoxesPolygon.drawPolygon(paths);
-            debugDisplayObjects.boundingBoxesPolygon.endFill();
+            debugDisplayObjects.boundingBoxesPolygon.poly(paths, true)
+                .fill({ color: this.boundingBoxesPolygonColor, alpha: 0.1 })
+                .stroke({ width: lineWidth, color: this.boundingBoxesPolygonColor });
         };
 
         for (let i = 0, len = polygons.length; i < len; i++) {
@@ -441,9 +431,8 @@ export class SpineDebugRenderer implements ISpineDebugRenderer {
     private drawPathsFunc(spine: SpineBase<ISkeleton, ISkeletonData, IAnimationState, IAnimationStateData>, debugDisplayObjects: DebugDisplayObjects, lineWidth: number): void {
         const skeleton = spine.skeleton;
         const slots = skeleton.slots;
-
-        debugDisplayObjects.pathsCurve.lineStyle(lineWidth, this.pathsCurveColor, 1);
-        debugDisplayObjects.pathsLine.lineStyle(lineWidth, this.pathsLineColor, 1);
+        let hasCurve = false;
+        let hasLine = false;
 
         for (let i = 0, len = slots.length; i < len; i++) {
             const slot = slots[i];
@@ -479,12 +468,14 @@ export class SpineDebugRenderer implements ISpineDebugRenderer {
                 // curve
                 debugDisplayObjects.pathsCurve.moveTo(x1, y1);
                 debugDisplayObjects.pathsCurve.bezierCurveTo(cx1, cy1, cx2, cy2, x2, y2);
+                hasCurve = true;
 
                 // handle
                 debugDisplayObjects.pathsLine.moveTo(x1, y1);
                 debugDisplayObjects.pathsLine.lineTo(cx1, cy1);
                 debugDisplayObjects.pathsLine.moveTo(x2, y2);
                 debugDisplayObjects.pathsLine.lineTo(cx2, cy2);
+                hasLine = true;
             }
             nn -= 4;
             for (let ii = 4; ii < nn; ii += 6) {
@@ -498,15 +489,24 @@ export class SpineDebugRenderer implements ISpineDebugRenderer {
                 // curve
                 debugDisplayObjects.pathsCurve.moveTo(x1, y1);
                 debugDisplayObjects.pathsCurve.bezierCurveTo(cx1, cy1, cx2, cy2, x2, y2);
+                hasCurve = true;
 
                 // handle
                 debugDisplayObjects.pathsLine.moveTo(x1, y1);
                 debugDisplayObjects.pathsLine.lineTo(cx1, cy1);
                 debugDisplayObjects.pathsLine.moveTo(x2, y2);
                 debugDisplayObjects.pathsLine.lineTo(cx2, cy2);
+                hasLine = true;
                 x1 = x2;
                 y1 = y2;
             }
+        }
+
+        if (hasCurve) {
+            debugDisplayObjects.pathsCurve.stroke({ width: lineWidth, color: this.pathsCurveColor, alpha: 1 });
+        }
+        if (hasLine) {
+            debugDisplayObjects.pathsLine.stroke({ width: lineWidth, color: this.pathsLineColor, alpha: 1 });
         }
     }
 
@@ -516,7 +516,7 @@ export class SpineDebugRenderer implements ISpineDebugRenderer {
         }
         const debugDisplayObjects = this.registeredSpines.get(spine);
 
-        debugDisplayObjects.parentDebugContainer.destroy({ baseTexture: true, children: true, texture: true });
+        debugDisplayObjects.parentDebugContainer.destroy({ children: true, texture: true });
         this.registeredSpines.delete(spine);
     }
 }

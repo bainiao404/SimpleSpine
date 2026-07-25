@@ -151,17 +151,12 @@ export function prepareTextureData(atlasData: string, textureBasePath: string): 
  * @private
  * @param url - 纹理图片 URL 地址
  */
-function _loadBaseTexture(url: string): Promise<any> {
-    return new Promise((resolve, reject) => {
-        const pixi = getPIXI();
-        if (!pixi) {
-            return reject(new Error('PIXI 实例不存在，请确保已加载 PixiJS 或通过 registerPIXI() 注册'));
-        }
-        const bt = pixi.BaseTexture.from(url);
-        if (bt.valid) return resolve(bt);
-        bt.once('loaded', () => resolve(bt));
-        bt.once('error', () => reject(new Error(`纹理加载失败: ${url}`)));
-    });
+async function _loadBaseTexture(url: string): Promise<any> {
+    const pixi = getPIXI();
+    if (!pixi) {
+        throw new Error('PIXI 实例不存在，请确保已加载 PixiJS 或通过 registerPIXI() 注册');
+    }
+    return await pixi.Assets.load(url);
 }
 
 /**
@@ -215,14 +210,14 @@ export async function readSpineSpineData(config: any): Promise<any> {
     const atlasInfoList = getTextureAtlasInfo(atlasData);
     const atlasInfoMap = new Map(atlasInfoList.map((item) => [item.name, item]));
 
-    // 1. 准备所有 BaseTexture
+    // 1. 准备所有 BaseTexture (TextureSource in v8)
     await Promise.all(
         textureData.map(async (tex: any) => {
             if (!tex.name.includes('.')) tex.name += '.png';
             const info = atlasInfoMap.get(tex.name);
             if (!info) return;
 
-            // 加载 BaseTexture
+            // 加载 Texture
             if (tex.src) {
                 tex.texture = await _loadBaseTexture(tex.src);
             } else if (tex.data) {
@@ -234,12 +229,19 @@ export async function readSpineSpineData(config: any): Promise<any> {
                     }
                     buffer = resizeRgbaBuffer(buffer, tex.width, tex.height, info.width, info.height);
                 }
-                tex.texture = pixi.BaseTexture.fromBuffer(buffer, info.width, info.height);
+                const source = new pixi.TextureSource({
+                    resource: buffer,
+                    width: info.width,
+                    height: info.height,
+                });
+                tex.texture = new pixi.Texture({ source });
             }
 
             // 强行校正尺寸以匹配 atlas 定义
             if (tex.texture && (tex.texture.width !== info.width || tex.texture.height !== info.height)) {
-                tex.texture.setSize(info.width, info.height);
+                tex.texture.frame.width = info.width;
+                tex.texture.frame.height = info.height;
+                tex.texture.update();
             }
         }),
     );
@@ -287,7 +289,7 @@ export async function readSpineSpineData(config: any): Promise<any> {
             this.texture.forEach((t: any) => {
                 if (t.isPremultipliedToStraight) return;
                 t.isPremultipliedToStraight = true;
-                t.alphaMode = needsP ? pixi.ALPHA_MODES.PREMULTIPLIED_ALPHA : pixi.ALPHA_MODES.NO_PREMULTIPLIED_ALPHA;
+                t.source.alphaMode = needsP ? pixi.ALPHA_MODES.PREMULTIPLIED_ALPHA : pixi.ALPHA_MODES.NO_PREMULTIPLIED_ALPHA;
             });
         },
     };

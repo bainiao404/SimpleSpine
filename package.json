@@ -7,14 +7,8 @@
     "build": "node build.mjs"
   },
   "devDependencies": {
-    "@esotericsoftware/spine-pixi-v7": "^4.2.83",
-    "@pixi/core": "^7.4.2",
-    "@pixi/display": "^7.4.2",
-    "@pixi/graphics": "^7.4.2",
-    "@pixi/mesh": "^7.4.2",
-    "@pixi/mesh-extras": "^7.4.2",
-    "@pixi/sprite": "^7.4.2",
-    "@pixi/assets": "^7.4.2",
+    "@esotericsoftware/spine-pixi-v8": "^4.2.53",
+    "pixi.js": "^8.2.3",
     "esbuild": "^0.19.11",
     "typescript": "5.4.2"
   }
