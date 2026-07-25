@@ -802,6 +802,7 @@ export abstract class SpineBase<
     }
 
     destroy(options?: any): void {
+        this.autoUpdate = false;
         this.debug = null; // setter will do the cleanup
 
         for (let i = 0, n = this.skeleton.slots.length; i < n; i++) {
