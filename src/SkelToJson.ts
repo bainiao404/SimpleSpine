@@ -6,11 +6,11 @@ import { SpineSkeletonData } from './types';
 export { readSkeletonData21, readSkeletonData34And35, readSkeletonData36And37 };
 
 /**
- * 将骨架数据从 v3.6/v3.7 格式升级为 v3.8 标准 JSON 结构
- * @param obj - 原始 3.6/3.7 JSON 结构对象
+ * 将骨架数据从遗留版本格式规范化升级为 v3.8 标准 JSON 结构
+ * @param obj - 原始遗留版本 JSON 结构对象
  * @returns 转换后的 3.8 标准对象
  */
-export function spine36To38(obj: SpineSkeletonData): SpineSkeletonData {
+export function normalizeTo38(obj: SpineSkeletonData): SpineSkeletonData {
     // 1. 深拷贝并移除所有 undefined 的属性，保证和本地保存再打开 JSON 的表现一致
     const skel = JSON.parse(JSON.stringify(obj)) as SpineSkeletonData;
 
@@ -93,7 +93,7 @@ export function spine36To38(obj: SpineSkeletonData): SpineSkeletonData {
         }
     };
 
-    // 执行动画和路径名称转换
+    // 执行动画 and 路径名称转换
     if (skel.animations) {
         processAnimations(skel.animations);
         // 转换 paths 关键字为 path
@@ -118,4 +118,11 @@ export function spine36To38(obj: SpineSkeletonData): SpineSkeletonData {
     setOrder(skel.path as any[], 2);
 
     return skel;
+}
+
+/**
+ * @deprecated 请使用 normalizeTo38 代替
+ */
+export function spine36To38(obj: SpineSkeletonData): SpineSkeletonData {
+    return normalizeTo38(obj);
 }

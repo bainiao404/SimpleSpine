@@ -4,6 +4,31 @@
  */
 import * as pixiSpine from '../bundles/pixi-spine/src/index';
 
+let PIXIInstance: any = null;
+
+/**
+ * 显式注册 PIXI 实例，以便在非浏览器/无全局 window 的环境下运行（如 SSR 或单元测试）
+ * @param pixi - PIXI 实例
+ */
+export function registerPIXI(pixi: any): void {
+    PIXIInstance = pixi;
+    // 如果有全局 window，也将它的 PIXI.spine 补全
+    if (typeof window !== 'undefined') {
+        const w = window as any;
+        w.PIXI = w.PIXI || pixi;
+        w.PIXI.spine = w.PIXI.spine || {};
+        Object.assign(w.PIXI.spine, pixiSpine);
+    }
+}
+
+/**
+ * 获取当前的 PIXI 实例
+ */
+export function getPIXI(): any {
+    return PIXIInstance || (typeof window !== 'undefined' ? (window as any).PIXI : null);
+}
+
+// 默认情况下，如果是浏览器环境则尝试自动初始化
 if (typeof window !== 'undefined') {
     const w = window as any;
     w.PIXI = w.PIXI || {};
@@ -11,11 +36,11 @@ if (typeof window !== 'undefined') {
     Object.assign(w.PIXI.spine, pixiSpine);
 }
 
-import { spine36To38, readSkeletonData36And37, readSkeletonData34And35, readSkeletonData21 } from './SkelToJson';
+import { normalizeTo38, spine36To38, readSkeletonData36And37, readSkeletonData34And35, readSkeletonData21 } from './SkelToJson';
 import { detectSpineVersion, isVersion, versionMap } from './VersionDetector';
 import { TextureInfo, TextureData } from './types';
 
-export { spine36To38, readSkeletonData36And37, readSkeletonData34And35, readSkeletonData21 };
+export { normalizeTo38, spine36To38, readSkeletonData36And37, readSkeletonData34And35, readSkeletonData21 };
 export { detectSpineVersion, isVersion, versionMap };
 
 import { isPremultiplied, isPremultipliedAlpha, resizeRgbaBuffer, premultipliedToStraight } from './TextureHelper';
@@ -128,11 +153,11 @@ export function prepareTextureData(atlasData: string, textureBasePath: string): 
  */
 function _loadBaseTexture(url: string): Promise<any> {
     return new Promise((resolve, reject) => {
-        const w = window as any;
-        if (typeof w.PIXI === 'undefined') {
-            return reject(new Error('全局 PIXI 对象不存在，请确保已加载 PixiJS'));
+        const pixi = getPIXI();
+        if (!pixi) {
+            return reject(new Error('PIXI 实例不存在，请确保已加载 PixiJS 或通过 registerPIXI() 注册'));
         }
-        const bt = w.PIXI.BaseTexture.from(url);
+        const bt = pixi.BaseTexture.from(url);
         if (bt.valid) return resolve(bt);
         bt.once('loaded', () => resolve(bt));
         bt.once('error', () => reject(new Error(`纹理加载失败: ${url}`)));
@@ -178,13 +203,13 @@ export function loadFile(url: string, responseType: string = 'text', options: an
  */
 export async function readSpineSpineData(config: any): Promise<any> {
     const { version, type, skeletonData, atlasData, textureData, originalSpine } = config;
-    const w = window as any;
+    const pixi = getPIXI();
 
-    if (typeof w.PIXI === 'undefined' || !w.PIXI.spine) {
-        throw new Error('未加载 PIXI.spine 插件');
+    if (!pixi || !pixi.spine) {
+        throw new Error('未加载 PIXI.spine 插件或未通过 registerPIXI() 注册');
     }
 
-    const spineSdk = w.PIXI.spine[`spine${version}`] || w.PIXI.spine;
+    const spineSdk = pixi.spine[`spine${version}`] || pixi.spine;
 
     // 建立纹理索引 Map，优化查询效率
     const atlasInfoList = getTextureAtlasInfo(atlasData);
@@ -209,7 +234,7 @@ export async function readSpineSpineData(config: any): Promise<any> {
                     }
                     buffer = resizeRgbaBuffer(buffer, tex.width, tex.height, info.width, info.height);
                 }
-                tex.texture = w.PIXI.BaseTexture.fromBuffer(buffer, info.width, info.height);
+                tex.texture = pixi.BaseTexture.fromBuffer(buffer, info.width, info.height);
             }
 
             // 强行校正尺寸以匹配 atlas 定义
@@ -222,7 +247,7 @@ export async function readSpineSpineData(config: any): Promise<any> {
     // 2. 创建 TextureAtlas
     let spineAtlas: any;
     if (parseInt(version, 10) < 42) {
-        spineAtlas = new w.PIXI.spine.TextureAtlas(atlasData, (line: string, callback: Function) => {
+        spineAtlas = new pixi.spine.TextureAtlas(atlasData, (line: string, callback: Function) => {
             const found = textureData.find((t: any) => t.name === line);
             callback(found ? found.texture : null);
         });
@@ -262,7 +287,7 @@ export async function readSpineSpineData(config: any): Promise<any> {
             this.texture.forEach((t: any) => {
                 if (t.isPremultipliedToStraight) return;
                 t.isPremultipliedToStraight = true;
-                t.alphaMode = needsP ? w.PIXI.ALPHA_MODES.PREMULTIPLIED_ALPHA : w.PIXI.ALPHA_MODES.NO_PREMULTIPLIED_ALPHA;
+                t.alphaMode = needsP ? pixi.ALPHA_MODES.PREMULTIPLIED_ALPHA : pixi.ALPHA_MODES.NO_PREMULTIPLIED_ALPHA;
             });
         },
     };
@@ -304,7 +329,7 @@ export async function processSpineData(params: any): Promise<any> {
 
         if (checkType(skeletonData) === 'obj') {
             originalSpine = skeletonData;
-            skeletonData = spine36To38(skeletonData);
+            skeletonData = normalizeTo38(skeletonData);
         }
     }
 
@@ -363,13 +388,13 @@ export async function load(src: any, options: any = {}): Promise<any> {
  * @param spineData - 由 load 方法返回的已处理数据对象
  */
 export function spine(spineData: any): any {
-    const w = window as any;
-    if (typeof w.PIXI === 'undefined' || !w.PIXI.spine) {
-        throw new Error('未加载 PIXI.spine 插件');
+    const pixi = getPIXI();
+    if (!pixi || !pixi.spine) {
+        throw new Error('未加载 PIXI.spine 插件或未通过 registerPIXI() 注册');
     }
 
     const isV42 = spineData.version === '42' || spineData.version === 42;
-    const sdk = isV42 ? w.PIXI.spine.spine42 : w.PIXI.spine;
+    const sdk = isV42 ? pixi.spine.spine42 : pixi.spine;
 
     const spineInstance = isV42 ? new sdk.Spine({ skeletonData: spineData.spine }) : new sdk.Spine(spineData.spine);
 
@@ -391,6 +416,9 @@ let SimpleSpine = {
     detectSpineVersion,
     isVersion,
     versionMap,
+    registerPIXI,
+    getPIXI,
+    normalizeTo38,
 };
 
 if (typeof window !== 'undefined') {
