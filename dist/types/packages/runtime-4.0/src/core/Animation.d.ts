@@ -1,0 +1,366 @@
+import type { Event } from './Event';
+import type { Skeleton } from './Skeleton';
+import { VertexAttachment } from './attachments';
+import { NumberArrayLike, IAnimation, ITimeline, MixBlend, StringSet, MixDirection } from '@pixi-spine/base';
+import type { Slot } from './Slot';
+/**
+ * A simple container for a list of timelines and a name.
+ * @public
+ * */
+export declare class Animation implements IAnimation<Timeline> {
+    /** The animation's name, which is unique across all animations in the skeleton. */
+    name: string;
+    timelines: Array<Timeline>;
+    timelineIds: StringSet;
+    /** The duration of the animation in seconds, which is the highest time of all keys in the timeline. */
+    duration: number;
+    constructor(name: string, timelines: Array<Timeline>, duration: number);
+    setTimelines(timelines: Array<Timeline>): void;
+    hasTimeline(ids: string[]): boolean;
+    /** Applies all the animation's timelines to the specified skeleton.
+     *
+     * See Timeline {@link Timeline#apply(Skeleton, float, float, Array, float, MixBlend, MixDirection)}.
+     * @param loop If true, the animation repeats after {@link #getDuration()}.
+     * @param events May be null to ignore fired events. */
+    apply(skeleton: Skeleton, lastTime: number, time: number, loop: boolean, events: Array<Event>, alpha: number, blend: MixBlend, direction: MixDirection): void;
+}
+/** The interface for all timelines.
+ * @public
+ * */
+export declare abstract class Timeline implements ITimeline {
+    propertyIds: string[];
+    frames: NumberArrayLike;
+    constructor(frameCount: number, propertyIds: string[]);
+    getPropertyIds(): string[];
+    getFrameEntries(): number;
+    getFrameCount(): number;
+    getDuration(): number;
+    abstract apply(skeleton: Skeleton, lastTime: number, time: number, events: Array<Event>, alpha: number, blend: MixBlend, direction: MixDirection): void;
+    static search1(frames: NumberArrayLike, time: number): number;
+    static search(frames: NumberArrayLike, time: number, step: number): number;
+}
+/**
+ * @public
+ */
+export interface BoneTimeline {
+    /** The index of the bone in {@link Skeleton#bones} that will be changed. */
+    boneIndex: number;
+}
+/**
+ * @public
+ */
+export interface SlotTimeline {
+    /** The index of the slot in {@link Skeleton#slots} that will be changed. */
+    slotIndex: number;
+}
+/** The base class for timelines that use interpolation between key frame values.
+ * @public
+ * */
+export declare abstract class CurveTimeline extends Timeline {
+    protected curves: NumberArrayLike;
+    constructor(frameCount: number, bezierCount: number, propertyIds: string[]);
+    /** Sets the specified key frame to linear interpolation. */
+    setLinear(frame: number): void;
+    /** Sets the specified key frame to stepped interpolation. */
+    setStepped(frame: number): void;
+    /** Shrinks the storage for Bezier curves, for use when <code>bezierCount</code> (specified in the constructor) was larger
+     * than the actual number of Bezier curves. */
+    shrink(bezierCount: number): void;
+    /** Stores the segments for the specified Bezier curve. For timelines that modify multiple values, there may be more than
+     * one curve per frame.
+     * @param bezier The ordinal of this Bezier curve for this timeline, between 0 and <code>bezierCount - 1</code> (specified
+     *           in the constructor), inclusive.
+     * @param frame Between 0 and <code>frameCount - 1</code>, inclusive.
+     * @param value The index of the value for this frame that this curve is used for.
+     * @param time1 The time for the first key.
+     * @param value1 The value for the first key.
+     * @param cx1 The time for the first Bezier handle.
+     * @param cy1 The value for the first Bezier handle.
+     * @param cx2 The time of the second Bezier handle.
+     * @param cy2 The value for the second Bezier handle.
+     * @param time2 The time for the second key.
+     * @param value2 The value for the second key. */
+    setBezier(bezier: number, frame: number, value: number, time1: number, value1: number, cx1: number, cy1: number, cx2: number, cy2: number, time2: number, value2: number): void;
+    /** Returns the Bezier interpolated value for the specified time.
+     * @param frameIndex The index into {@link #getFrames()} for the values of the frame before <code>time</code>.
+     * @param valueOffset The offset from <code>frameIndex</code> to the value this curve is used for.
+     * @param i The index of the Bezier segments. See {@link #getCurveType(int)}. */
+    getBezierValue(time: number, frameIndex: number, valueOffset: number, i: number): number;
+}
+/**
+ * @public
+ */
+export declare abstract class CurveTimeline1 extends CurveTimeline {
+    constructor(frameCount: number, bezierCount: number, propertyId: string);
+    getFrameEntries(): number;
+    /** Sets the time and value for the specified frame.
+     * @param frame Between 0 and <code>frameCount</code>, inclusive.
+     * @param time The frame time in seconds. */
+    setFrame(frame: number, time: number, value: number): void;
+    /** Returns the interpolated value for the specified time. */
+    getCurveValue(time: number): number;
+}
+/** The base class for a {@link CurveTimeline} which sets two properties.
+ * @public
+ * */
+export declare abstract class CurveTimeline2 extends CurveTimeline {
+    /** @param bezierCount The maximum number of Bezier curves. See {@link #shrink(int)}.
+     * @param propertyIds Unique identifiers for the properties the timeline modifies. */
+    constructor(frameCount: number, bezierCount: number, propertyId1: string, propertyId2: string);
+    getFrameEntries(): number;
+    /** Sets the time and values for the specified frame.
+     * @param frame Between 0 and <code>frameCount</code>, inclusive.
+     * @param time The frame time in seconds. */
+    setFrame(frame: number, time: number, value1: number, value2: number): void;
+}
+/** Changes a bone's local {@link Bone#rotation}.
+ * @public
+ * */
+export declare class RotateTimeline extends CurveTimeline1 implements BoneTimeline {
+    boneIndex: number;
+    constructor(frameCount: number, bezierCount: number, boneIndex: number);
+    apply(skeleton: Skeleton, lastTime: number, time: number, events: Array<Event>, alpha: number, blend: MixBlend, direction: MixDirection): void;
+}
+/** Changes a bone's local {@link Bone#x} and {@link Bone#y}.
+ * @public
+ * */
+export declare class TranslateTimeline extends CurveTimeline2 implements BoneTimeline {
+    boneIndex: number;
+    constructor(frameCount: number, bezierCount: number, boneIndex: number);
+    apply(skeleton: Skeleton, lastTime: number, time: number, events: Array<Event>, alpha: number, blend: MixBlend, direction: MixDirection): void;
+}
+/** Changes a bone's local {@link Bone#x}.
+ * @public
+ * */
+export declare class TranslateXTimeline extends CurveTimeline1 implements BoneTimeline {
+    boneIndex: number;
+    constructor(frameCount: number, bezierCount: number, boneIndex: number);
+    apply(skeleton: Skeleton, lastTime: number, time: number, events: Array<Event>, alpha: number, blend: MixBlend, direction: MixDirection): void;
+}
+/** Changes a bone's local {@link Bone#x}.
+ * @public
+ * */
+export declare class TranslateYTimeline extends CurveTimeline1 implements BoneTimeline {
+    boneIndex: number;
+    constructor(frameCount: number, bezierCount: number, boneIndex: number);
+    apply(skeleton: Skeleton, lastTime: number, time: number, events: Array<Event>, alpha: number, blend: MixBlend, direction: MixDirection): void;
+}
+/** Changes a bone's local {@link Bone#scaleX)} and {@link Bone#scaleY}.
+ * @public
+ * */
+export declare class ScaleTimeline extends CurveTimeline2 implements BoneTimeline {
+    boneIndex: number;
+    constructor(frameCount: number, bezierCount: number, boneIndex: number);
+    apply(skeleton: Skeleton, lastTime: number, time: number, events: Array<Event>, alpha: number, blend: MixBlend, direction: MixDirection): void;
+}
+/** Changes a bone's local {@link Bone#scaleX)} and {@link Bone#scaleY}.
+ * @public
+ * */
+export declare class ScaleXTimeline extends CurveTimeline1 implements BoneTimeline {
+    boneIndex: number;
+    constructor(frameCount: number, bezierCount: number, boneIndex: number);
+    apply(skeleton: Skeleton, lastTime: number, time: number, events: Array<Event>, alpha: number, blend: MixBlend, direction: MixDirection): void;
+}
+/** Changes a bone's local {@link Bone#scaleX)} and {@link Bone#scaleY}.
+ * @public
+ * */
+export declare class ScaleYTimeline extends CurveTimeline1 implements BoneTimeline {
+    boneIndex: number;
+    constructor(frameCount: number, bezierCount: number, boneIndex: number);
+    apply(skeleton: Skeleton, lastTime: number, time: number, events: Array<Event>, alpha: number, blend: MixBlend, direction: MixDirection): void;
+}
+/** Changes a bone's local {@link Bone#shearX} and {@link Bone#shearY}.
+ * @public
+ * */
+export declare class ShearTimeline extends CurveTimeline2 implements BoneTimeline {
+    boneIndex: number;
+    constructor(frameCount: number, bezierCount: number, boneIndex: number);
+    apply(skeleton: Skeleton, lastTime: number, time: number, events: Array<Event>, alpha: number, blend: MixBlend, direction: MixDirection): void;
+}
+/** Changes a bone's local {@link Bone#shearX} and {@link Bone#shearY}.
+ * @public
+ * */
+export declare class ShearXTimeline extends CurveTimeline1 implements BoneTimeline {
+    boneIndex: number;
+    constructor(frameCount: number, bezierCount: number, boneIndex: number);
+    apply(skeleton: Skeleton, lastTime: number, time: number, events: Array<Event>, alpha: number, blend: MixBlend, direction: MixDirection): void;
+}
+/** Changes a bone's local {@link Bone#shearX} and {@link Bone#shearY}.
+ * @public
+ * */
+export declare class ShearYTimeline extends CurveTimeline1 implements BoneTimeline {
+    boneIndex: number;
+    constructor(frameCount: number, bezierCount: number, boneIndex: number);
+    apply(skeleton: Skeleton, lastTime: number, time: number, events: Array<Event>, alpha: number, blend: MixBlend, direction: MixDirection): void;
+}
+/** Changes a slot's {@link Slot#color}.
+ * @public
+ * */
+export declare class RGBATimeline extends CurveTimeline implements SlotTimeline {
+    slotIndex: number;
+    constructor(frameCount: number, bezierCount: number, slotIndex: number);
+    getFrameEntries(): number;
+    /** Sets the time in seconds, red, green, blue, and alpha for the specified key frame. */
+    setFrame(frame: number, time: number, r: number, g: number, b: number, a: number): void;
+    apply(skeleton: Skeleton, lastTime: number, time: number, events: Array<Event>, alpha: number, blend: MixBlend, direction: MixDirection): void;
+}
+/** Changes a slot's {@link Slot#color}.
+ * @public
+ * */
+export declare class RGBTimeline extends CurveTimeline implements SlotTimeline {
+    slotIndex: number;
+    constructor(frameCount: number, bezierCount: number, slotIndex: number);
+    getFrameEntries(): number;
+    /** Sets the time in seconds, red, green, blue, and alpha for the specified key frame. */
+    setFrame(frame: number, time: number, r: number, g: number, b: number): void;
+    apply(skeleton: Skeleton, lastTime: number, time: number, events: Array<Event>, alpha: number, blend: MixBlend, direction: MixDirection): void;
+}
+/** Changes a bone's local {@link Bone#shearX} and {@link Bone#shearY}.
+ * @public
+ * */
+export declare class AlphaTimeline extends CurveTimeline1 implements SlotTimeline {
+    slotIndex: number;
+    constructor(frameCount: number, bezierCount: number, slotIndex: number);
+    apply(skeleton: Skeleton, lastTime: number, time: number, events: Array<Event>, alpha: number, blend: MixBlend, direction: MixDirection): void;
+}
+/** Changes a slot's {@link Slot#color} and {@link Slot#darkColor} for two color tinting.
+ * @public
+ * */
+export declare class RGBA2Timeline extends CurveTimeline implements SlotTimeline {
+    slotIndex: number;
+    constructor(frameCount: number, bezierCount: number, slotIndex: number);
+    getFrameEntries(): number;
+    /** Sets the time in seconds, light, and dark colors for the specified key frame. */
+    setFrame(frame: number, time: number, r: number, g: number, b: number, a: number, r2: number, g2: number, b2: number): void;
+    apply(skeleton: Skeleton, lastTime: number, time: number, events: Array<Event>, alpha: number, blend: MixBlend, direction: MixDirection): void;
+}
+/** Changes a slot's {@link Slot#color} and {@link Slot#darkColor} for two color tinting.
+ * @public
+ * */
+export declare class RGB2Timeline extends CurveTimeline implements SlotTimeline {
+    slotIndex: number;
+    constructor(frameCount: number, bezierCount: number, slotIndex: number);
+    getFrameEntries(): number;
+    /** Sets the time in seconds, light, and dark colors for the specified key frame. */
+    setFrame(frame: number, time: number, r: number, g: number, b: number, r2: number, g2: number, b2: number): void;
+    apply(skeleton: Skeleton, lastTime: number, time: number, events: Array<Event>, alpha: number, blend: MixBlend, direction: MixDirection): void;
+}
+/** Changes a slot's {@link Slot#attachment}.
+ * @public
+ * */
+export declare class AttachmentTimeline extends Timeline implements SlotTimeline {
+    slotIndex: number;
+    /** The attachment name for each key frame. May contain null values to clear the attachment. */
+    attachmentNames: Array<string>;
+    constructor(frameCount: number, slotIndex: number);
+    getFrameCount(): number;
+    /** Sets the time in seconds and the attachment name for the specified key frame. */
+    setFrame(frame: number, time: number, attachmentName: string): void;
+    apply(skeleton: Skeleton, lastTime: number, time: number, events: Array<Event>, alpha: number, blend: MixBlend, direction: MixDirection): void;
+    setAttachment(skeleton: Skeleton, slot: Slot, attachmentName: string): void;
+}
+/** Changes a slot's {@link Slot#deform} to deform a {@link VertexAttachment}.
+ * @public
+ * */
+export declare class DeformTimeline extends CurveTimeline implements SlotTimeline {
+    slotIndex: number;
+    /** The attachment that will be deformed. */
+    attachment: VertexAttachment;
+    /** The vertices for each key frame. */
+    vertices: Array<NumberArrayLike>;
+    constructor(frameCount: number, bezierCount: number, slotIndex: number, attachment: VertexAttachment);
+    getFrameCount(): number;
+    /** Sets the time in seconds and the vertices for the specified key frame.
+     * @param vertices Vertex positions for an unweighted VertexAttachment, or deform offsets if it has weights. */
+    setFrame(frame: number, time: number, vertices: NumberArrayLike): void;
+    /** @param value1 Ignored (0 is used for a deform timeline).
+     * @param value2 Ignored (1 is used for a deform timeline). */
+    setBezier(bezier: number, frame: number, value: number, time1: number, value1: number, cx1: number, cy1: number, cx2: number, cy2: number, time2: number, value2: number): void;
+    getCurvePercent(time: number, frame: number): number;
+    apply(skeleton: Skeleton, lastTime: number, time: number, firedEvents: Array<Event>, alpha: number, blend: MixBlend, direction: MixDirection): void;
+}
+/** Fires an {@link Event} when specific animation times are reached.
+ * @public
+ * */
+export declare class EventTimeline extends Timeline {
+    static propertyIds: string[];
+    /** The event for each key frame. */
+    events: Array<Event>;
+    constructor(frameCount: number);
+    getFrameCount(): number;
+    /** Sets the time in seconds and the event for the specified key frame. */
+    setFrame(frame: number, event: Event): void;
+    /** Fires events for frames > `lastTime` and <= `time`. */
+    apply(skeleton: Skeleton, lastTime: number, time: number, firedEvents: Array<Event>, alpha: number, blend: MixBlend, direction: MixDirection): void;
+}
+/** Changes a skeleton's {@link Skeleton#drawOrder}.
+ * @public
+ * */
+export declare class DrawOrderTimeline extends Timeline {
+    static propertyIds: string[];
+    /** The draw order for each key frame. See {@link #setFrame(int, float, int[])}. */
+    drawOrders: Array<Array<number>>;
+    constructor(frameCount: number);
+    getFrameCount(): number;
+    /** Sets the time in seconds and the draw order for the specified key frame.
+     * @param drawOrder For each slot in {@link Skeleton#slots}, the index of the new draw order. May be null to use setup pose
+     *           draw order. */
+    setFrame(frame: number, time: number, drawOrder: Array<number>): void;
+    apply(skeleton: Skeleton, lastTime: number, time: number, firedEvents: Array<Event>, alpha: number, blend: MixBlend, direction: MixDirection): void;
+}
+/** Changes an IK constraint's {@link IkConstraint#mix}, {@link IkConstraint#softness},
+ * {@link IkConstraint#bendDirection}, {@link IkConstraint#stretch}, and {@link IkConstraint#compress}.
+ * @public
+ * */
+export declare class IkConstraintTimeline extends CurveTimeline {
+    /** The index of the IK constraint slot in {@link Skeleton#ikConstraints} that will be changed. */
+    ikConstraintIndex: number;
+    constructor(frameCount: number, bezierCount: number, ikConstraintIndex: number);
+    getFrameEntries(): number;
+    /** Sets the time in seconds, mix, softness, bend direction, compress, and stretch for the specified key frame. */
+    setFrame(frame: number, time: number, mix: number, softness: number, bendDirection: number, compress: boolean, stretch: boolean): void;
+    apply(skeleton: Skeleton, lastTime: number, time: number, firedEvents: Array<Event>, alpha: number, blend: MixBlend, direction: MixDirection): void;
+}
+/** Changes a transform constraint's {@link TransformConstraint#rotateMix}, {@link TransformConstraint#translateMix},
+ * {@link TransformConstraint#scaleMix}, and {@link TransformConstraint#shearMix}.
+ * @public
+ * */
+export declare class TransformConstraintTimeline extends CurveTimeline {
+    /** The index of the transform constraint slot in {@link Skeleton#transformConstraints} that will be changed. */
+    transformConstraintIndex: number;
+    constructor(frameCount: number, bezierCount: number, transformConstraintIndex: number);
+    getFrameEntries(): number;
+    /** The time in seconds, rotate mix, translate mix, scale mix, and shear mix for the specified key frame. */
+    setFrame(frame: number, time: number, mixRotate: number, mixX: number, mixY: number, mixScaleX: number, mixScaleY: number, mixShearY: number): void;
+    apply(skeleton: Skeleton, lastTime: number, time: number, firedEvents: Array<Event>, alpha: number, blend: MixBlend, direction: MixDirection): void;
+}
+/** Changes a path constraint's {@link PathConstraint#position}.
+ * @public
+ * */
+export declare class PathConstraintPositionTimeline extends CurveTimeline1 {
+    /** The index of the path constraint slot in {@link Skeleton#pathConstraints} that will be changed. */
+    pathConstraintIndex: number;
+    constructor(frameCount: number, bezierCount: number, pathConstraintIndex: number);
+    apply(skeleton: Skeleton, lastTime: number, time: number, firedEvents: Array<Event>, alpha: number, blend: MixBlend, direction: MixDirection): void;
+}
+/** Changes a path constraint's {@link PathConstraint#spacing}.
+ * @public
+ * */
+export declare class PathConstraintSpacingTimeline extends CurveTimeline1 {
+    /** The index of the path constraint slot in {@link Skeleton#getPathConstraints()} that will be changed. */
+    pathConstraintIndex: number;
+    constructor(frameCount: number, bezierCount: number, pathConstraintIndex: number);
+    apply(skeleton: Skeleton, lastTime: number, time: number, firedEvents: Array<Event>, alpha: number, blend: MixBlend, direction: MixDirection): void;
+}
+/** Changes a transform constraint's {@link PathConstraint#getMixRotate()}, {@link PathConstraint#getMixX()}, and
+ * {@link PathConstraint#getMixY()}.
+ * @public
+ * */
+export declare class PathConstraintMixTimeline extends CurveTimeline {
+    /** The index of the path constraint slot in {@link Skeleton#getPathConstraints()} that will be changed. */
+    pathConstraintIndex: number;
+    constructor(frameCount: number, bezierCount: number, pathConstraintIndex: number);
+    getFrameEntries(): number;
+    setFrame(frame: number, time: number, mixRotate: number, mixX: number, mixY: number): void;
+    apply(skeleton: Skeleton, lastTime: number, time: number, firedEvents: Array<Event>, alpha: number, blend: MixBlend, direction: MixDirection): void;
+}

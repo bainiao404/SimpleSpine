@@ -270,7 +270,7 @@ export function readSkeletonData34And35(binary: ArrayBuffer): SpineSkeletonData 
     for (let i = 0; i < eventsCount; ++i) {
         const name = input.readString() || '';
         const eventData = {
-            intValue: input.readVarint(0),
+            intValue: input.readVarint(false),
             floatValue: input.readFloat(),
             stringValue: input.readString() || undefined,
         };

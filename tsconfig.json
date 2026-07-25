@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "target": "es6",
+        "target": "es2022",
         "allowJs": true,
         "removeComments": false,
         "strict": true,
@@ -12,14 +12,30 @@
         "esModuleInterop": true,
         "moduleResolution": "node",
         "baseUrl": "./",
-        "outDir": "./compile",
-        "declaration": false,
+        "outDir": "./dist/types",
+        "declaration": true,
+        "emitDeclarationOnly": true,
         "declarationMap": false,
         "allowSyntheticDefaultImports": true,
+        "skipLibCheck": true,
         "lib": [
-            "es6",
+            "es2022",
             "dom"
-        ]
+        ],
+        "paths": {
+            "@pixi-spine/base": ["packages/base/src/index.ts"],
+            "@pixi-spine/loader-3.8": ["packages/loader-3.8/src/index.ts"],
+            "@pixi-spine/loader-4.0": ["packages/loader-4.0/src/index.ts"],
+            "@pixi-spine/loader-4.1": ["packages/loader-4.1/src/index.ts"],
+            "@pixi-spine/loader-4.2": ["packages/loader-4.2/src/index.ts"],
+            "@pixi-spine/loader-base": ["packages/loader-base/src/index.ts"],
+            "@pixi-spine/loader-uni": ["packages/loader-uni/src/index.ts"],
+            "@pixi-spine/runtime-3.7": ["packages/runtime-3.7/src/index.ts"],
+            "@pixi-spine/runtime-3.8": ["packages/runtime-3.8/src/index.ts"],
+            "@pixi-spine/runtime-4.0": ["packages/runtime-4.0/src/index.ts"],
+            "@pixi-spine/runtime-4.1": ["packages/runtime-4.1/src/index.ts"],
+            "@pixi-spine/runtime-4.2": ["packages/runtime-4.2/src/index.ts"]
+        }
     },
     "exclude": [
         "node_modules",
