@@ -8,7 +8,7 @@ const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
 
 const compiled = new Date().toUTCString().replace(/GMT/g, 'UTC');
 const bannerContent = `/*!
- * SimpleSpineNext - v${pkg.version}
+ * simple-pixi-spine - v${pkg.version}
  * Compiled ${compiled}
  *
  * Integrated spine-pixi runtime with SimpleSpine wrapper.
@@ -100,9 +100,9 @@ async function build() {
     ...baseConfig,
     format: 'esm',
     external: ['@pixi/*'],
-    outfile: 'dist/simplespine.mjs',
+    outfile: 'dist/simple-pixi-spine.mjs',
   });
-  console.log('✓ Created ESM Bundle: dist/simplespine.mjs');
+  console.log('✓ Created ESM Bundle: dist/simple-pixi-spine.mjs');
 
   // 2. Build IIFE script (.js) - Inline external @pixi/* to global window.PIXI lookup
   await esbuild.build({
@@ -110,9 +110,9 @@ async function build() {
     format: 'iife',
     globalName: 'SimpleSpine',
     plugins: [pixiGlobalsPlugin],
-    outfile: 'dist/simplespine.js',
+    outfile: 'dist/simple-pixi-spine.js',
   });
-  console.log('✓ Created IIFE Script: dist/simplespine.js');
+  console.log('✓ Created IIFE Script: dist/simple-pixi-spine.js');
 
   console.log(`✨ Build finished in ${Date.now() - startTime}ms`);
 }

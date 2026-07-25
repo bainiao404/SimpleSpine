@@ -1,4 +1,4 @@
-# SimpleSpine
+# simple-pixi-spine
 
 <p align="center">
   <img src="https://img.shields.io/badge/Release-v1.0.0-blue.svg?style=flat-square" alt="Release">
@@ -7,9 +7,9 @@
   <img src="https://img.shields.io/badge/TypeScript-Strict-blue.svg?style=flat-square" alt="TypeScript">
 </p>
 
-> 当前分支仅适用于 **PixiJS v7** 环境。若使用的是 **PixiJS v8**，请跳转使用 **[pixi8](https://github.com/bainiao404/SimpleSpine/tree/pixi8)** 分支。
+> 当前分支仅适用于 **PixiJS v7** 环境。若使用的是 **PixiJS v8**，请跳转使用 **[pixi8](https://github.com/bainiao404/simple-pixi-spine/tree/pixi8)** 分支。
 
-**SimpleSpine** 是面向 PixiJS v7 的多版本 Spine 动画兼容适配与加载封装库。
+**simple-pixi-spine** 是面向 PixiJS v7 的多版本 Spine 动画兼容适配与加载封装库。
 
 该项目旨在解决多版本 Spine 骨骼资源在前端加载时的版本冲突与 API 兼容问题。支持对 **Spine v2.1 至 v4.2** 导出的骨骼数据（包括 `.skel` 二进制及 `.json` 文本格式）进行**自动版本识别**与**向下兼容性转换**，为上层应用提供统一的调用接口。
 
@@ -42,8 +42,8 @@ npm run build
 
 编译产物包括：
 
-- `dist/simplespine.js`：适合在浏览器中使用 `<script>` 标签直接引入的 IIFE 格式文件（全局暴露 `SimpleSpine` 命名空间）。
-- `dist/simplespine.mjs`：适合 Vite / Webpack / ESM 模块化打包工具链的现代 ESM 包。
+- `dist/simple-pixi-spine.js`：适合在浏览器中使用 `<script>` 标签直接引入的 IIFE 格式文件（全局暴露 `SimpleSpine` 命名空间）。
+- `dist/simple-pixi-spine.mjs`：适合 Vite / Webpack / ESM 模块化打包工具链的现代 ESM 包。
 
 ---
 
@@ -54,7 +54,7 @@ npm run build
 通过指定骨骼资源的路径，加载器将并发自动拉取同名 `.atlas` 和 `.png` 纹理集。
 
 ```javascript
-import SimpleSpine, { registerPIXI } from "simplespine";
+import SimpleSpine, { registerPIXI } from "simple-pixi-spine";
 
 // 1. 显式注册 PIXI 实例 (若在全局 window 环境下则已自动挂载)
 registerPIXI(PIXI);

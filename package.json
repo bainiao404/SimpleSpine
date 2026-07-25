@@ -1,5 +1,5 @@
 {
-  "name": "simplespinenext",
+  "name": "simple-pixi-spine",
   "version": "1.0.0",
   "private": true,
   "description": "Unified spine-pixi runtime with SimpleSpine wrapper built using Esbuild",
