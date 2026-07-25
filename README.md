@@ -46,9 +46,9 @@ npm run build
 
 ## 使用示例
 
-### 1. 远程网络资源加载
+### 1. 默认网络资源加载
 
-通过指定骨骼资源的路径，加载器将并发自动拉取对应的 `.atlas` 和 `.png` 纹理集。
+通过指定骨骼资源的路径，加载器将并发自动拉取同名 `.atlas` 和 `.png` 纹理集。
 
 ```javascript
 import SimpleSpine, { registerPIXI } from 'simplespine';
@@ -78,26 +78,86 @@ async function initSpine() {
 }
 ```
 
-### 2. 内存数据直接加载
+### 2. 异构网络路径配置加载
 
-对于已在运行期加载到内存中的资源，可直接传入 `MemorySpineSource` 结构实现零网络 IO 渲染。
+如果资源的 `.skel`/`.json`、`.atlas` 以及图片存放在不同的 CDN 目录或使用不同的后缀，可以通过配置对象进行显式覆盖：
 
 ```javascript
-// 假设已从本地拖拽或加密接口拉取到数据
-const mySkelBuffer = new Uint8Array([...]).buffer; // 骨骼 ArrayBuffer
-const myAtlasText = "spineboy.png\nsize: 1024,256..."; // 图集配置字符串
-
 const spineData = await SimpleSpine.load({
-  skeletonData: mySkelBuffer, // 传入 ArrayBuffer (自动判定为 skel 二进制格式)
-  atlasData: myAtlasText,
-  texturePath: 'assets/'      // 纹理图片网络请求的基准目录 (也可直接通过 textureData 传入图片 base64/blob)
+  path: [
+    'https://cdn.example.com/skeletons/hero_anim.skel', // 骨骼二进制数据路径
+    'https://cdn.example.com/atlases/hero.atlas',       // 图集配置路径
+    'https://cdn.example.com/textures/'                 // 图片纹理基础 CDN 目录
+  ]
 });
-
-const { spine: spineCharacter } = SimpleSpine.spine(spineData);
-app.stage.addChild(spineCharacter);
 ```
 
-### 3. 骨骼调试线绘制
+或者使用 `options` 选项进行单项覆盖：
+
+```javascript
+const spineData = await SimpleSpine.load('assets/hero.json', {
+  atlasPath: 'custom/hero.atlas',
+  texturePath: 'custom/images/'
+});
+```
+
+### 3. 纯内存数据加载
+
+对于已在运行期下载或解密到内存中的资源，可直接传入 `MemorySpineSource` 结构实现零网络 IO 渲染。
+
+```javascript
+const mySkelBuffer = new Uint8Array([...]).buffer; // 骨骼二进制数据
+const myAtlasText = "hero.png\nsize: 1024,256..."; // 图集配置文本
+
+const spineData = await SimpleSpine.load({
+  skeletonData: mySkelBuffer,
+  atlasData: myAtlasText,
+  // 此时图集内定义的贴图 hero.png 会自动向 assets/ 目录下请求拉取
+  texturePath: 'assets/'
+});
+```
+
+### 4. 本地文件拖拽离线加载 (Blob URL 模式)
+
+在 Web 资源预览编辑器等离线应用中，可以通过拖拽读取本地 `File` 转化为 Blob URL，完全不需要服务器网络请求。
+
+```javascript
+// 假设通过 <input type="file" multiple> 获取到了本地文件对象
+const skelFile = files.find(f => f.name.endsWith('.skel'));
+const atlasFile = files.find(f => f.name.endsWith('.atlas'));
+const pngFile = files.find(f => f.name.endsWith('.png'));
+
+// 读取骨骼和图集数据
+const skelBuffer = await skelFile.arrayBuffer();
+const atlasText = await atlasFile.text();
+
+// 创建图片的本地临时 Blob 链接
+const pngBlobUrl = URL.createObjectURL(pngFile);
+
+const spineData = await SimpleSpine.load({
+  skeletonData: skelBuffer,
+  atlasData: atlasText,
+  // 显式传入本地图集图片的映射信息
+  textureData: [
+    {
+      name: pngFile.name, // 对应图集文本第二行定义的图片名称 (如 'hero.png')
+      src: pngBlobUrl     // 本地 Blob URL 
+    }
+  ]
+});
+```
+
+### 5. 显式指定版本解析 (覆写自检测)
+
+在少数老旧骨骼资源版本信息损坏或无法被加载器自动检测出来时，可以通过 `options.version` 显式指定解析的版本（如强制作为 `38` 或 `41` 版本解析）：
+
+```javascript
+const spineData = await SimpleSpine.load('assets/legacy_data.skel', {
+  version: '38' // 覆写自动检测，强制按 Spine v3.8 规范解析
+});
+```
+
+### 6. 骨骼调试线绘制
 
 ```javascript
 const { spine, debug } = SimpleSpine.spine(spineData);
