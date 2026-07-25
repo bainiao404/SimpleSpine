@@ -162,3 +162,13 @@ export interface TextureData {
     height?: number;
     texture?: any;
 }
+
+export interface MemorySpineSource {
+    skeletonData: ArrayBuffer | string | object;
+    atlasData: string;
+    textureData?: TextureData[];
+    texturePath?: string;
+    version?: string;
+    path?: string[];
+    atlasPath?: string;
+}

@@ -38,7 +38,7 @@ if (typeof window !== 'undefined') {
 
 import { normalizeTo38, spine36To38, readSkeletonData36And37, readSkeletonData34And35, readSkeletonData21 } from './SkelToJson';
 import { detectSpineVersion, isVersion, versionMap } from './VersionDetector';
-import { TextureInfo, TextureData } from './types';
+import { TextureInfo, TextureData, MemorySpineSource } from './types';
 
 export { normalizeTo38, spine36To38, readSkeletonData36And37, readSkeletonData34And35, readSkeletonData21 };
 export { detectSpineVersion, isVersion, versionMap };
@@ -344,39 +344,75 @@ export async function processSpineData(params: any): Promise<any> {
 }
 
 /**
- * 外部加载入口函数
- * @param src - 路径字符串或结构化的路径对象
+ * 外部加载入口函数，支持加载网络 URL 路径或直接加载内存中的预拉取数据对象
+ * @param src - 路径字符串、结构化的路径对象，或者 MemorySpineSource 内存资源对象
  * @param options - 配置项
  */
-export async function load(src: any, options: any = {}): Promise<any> {
-    const srcs = getSpineSrc(src, options);
-    const skelFileType = srcs.type === 'skel' ? 'arraybuffer' : 'text';
+export async function load(src: string | object | MemorySpineSource, options: any = {}): Promise<any> {
+    const isMemoryLoad = src && typeof src === 'object' && ('skeletonData' in src || 'atlasData' in src);
 
     try {
-        const [skelRes, atlasRes] = await Promise.all([
-            loadFile(srcs.path[0], skelFileType, { onProgress: options.onProgress }),
-            loadFile(srcs.atlasPath || srcs.path[1], 'text'),
-        ]);
+        let skeletonData: any;
+        let atlasData: string;
+        let textureData: TextureData[];
+        let fileType: 'skel' | 'json';
+        let version: string | null;
+        let info: any = null;
 
-        const textureData = prepareTextureData(atlasRes.data, srcs.texturePath || srcs.path[2]);
+        if (isMemoryLoad) {
+            const memorySrc = src as MemorySpineSource;
+            skeletonData = memorySrc.skeletonData;
+            atlasData = memorySrc.atlasData || '';
+            fileType = (skeletonData instanceof ArrayBuffer || skeletonData instanceof Uint8Array) ? 'skel' : 'json';
+            
+            const textureBasePath = memorySrc.texturePath || options.texturePath || '';
+            textureData = memorySrc.textureData || prepareTextureData(atlasData, textureBasePath);
+            
+            version = memorySrc.version || options.version || detectSpineVersion({
+                data: skeletonData,
+                type: fileType,
+                fallbackVersion: options.version
+            });
+            info = {
+                type: fileType,
+                path: memorySrc.path || [],
+                atlasPath: memorySrc.atlasPath || '',
+                texturePath: textureBasePath,
+                version
+            };
+        } else {
+            const srcs = getSpineSrc(src, options);
+            const skelFileType = srcs.type === 'skel' ? 'arraybuffer' : 'text';
+            fileType = srcs.type;
+            info = srcs;
 
-        const version = detectSpineVersion({
-            data: skelRes.data,
-            type: srcs.type,
-            fallbackVersion: srcs.version,
-        });
+            const [skelRes, atlasRes] = await Promise.all([
+                loadFile(srcs.path[0], skelFileType, { onProgress: options.onProgress }),
+                loadFile(srcs.atlasPath || srcs.path[1], 'text'),
+            ]);
+
+            skeletonData = skelRes.data;
+            atlasData = atlasRes.data;
+            textureData = prepareTextureData(atlasData, srcs.texturePath || srcs.path[2]);
+            
+            version = detectSpineVersion({
+                data: skeletonData,
+                type: fileType,
+                fallbackVersion: srcs.version,
+            });
+        }
 
         if (!version) throw new Error('未知版本号或者非spine文件');
 
         const processedData = await processSpineData({
             version,
-            skelData: skelRes.data,
-            atlasData: atlasRes.data,
+            skelData: skeletonData,
+            atlasData,
             textureData,
-            fileType: srcs.type,
+            fileType,
         });
 
-        return { ...processedData, info: srcs };
+        return { ...processedData, info };
     } catch (error) {
         console.error('加载Spine资源失败:', error);
         throw error;
