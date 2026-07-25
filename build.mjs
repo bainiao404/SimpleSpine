@@ -45,6 +45,30 @@ const pixiGlobalsPlugin = {
               const PIXI = (typeof window !== 'undefined' && window.PIXI) || (typeof global !== 'undefined' && global.PIXI);
               if (prop === 'default') return PIXI || proxy;
               return PIXI ? PIXI[prop] : undefined;
+            },
+            ownKeys(target) {
+              const PIXI = (typeof window !== 'undefined' && window.PIXI) || (typeof global !== 'undefined' && global.PIXI);
+              return PIXI ? Reflect.ownKeys(PIXI) : [];
+            },
+            getOwnPropertyDescriptor(target, prop) {
+              const PIXI = (typeof window !== 'undefined' && window.PIXI) || (typeof global !== 'undefined' && global.PIXI);
+              if (PIXI && prop in PIXI) {
+                return {
+                  enumerable: true,
+                  configurable: true,
+                  writable: true,
+                  value: PIXI[prop]
+                };
+              }
+              if (prop === '__esModule') {
+                return {
+                  enumerable: true,
+                  configurable: true,
+                  writable: true,
+                  value: true
+                };
+              }
+              return undefined;
             }
           });
           module.exports = proxy;
