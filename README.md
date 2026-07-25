@@ -42,7 +42,7 @@ npm run build
 
 编译产物包括：
 
-- `dist/simple-pixi-spine.js`：适合在浏览器中使用 `<script>` 标签直接引入的 IIFE 格式文件（全局暴露 `SimpleSpine` 命名空间）。
+- `dist/simple-pixi-spine.js`：适合在浏览器中使用 `<script>` 标签直接引入的 IIFE 格式文件（全局暴露 `SimplePixiSpine` 命名空间）。
 - `dist/simple-pixi-spine.mjs`：适合 Vite / Webpack / ESM 模块化打包工具链的现代 ESM 包。
 
 ---
@@ -54,7 +54,7 @@ npm run build
 通过指定骨骼资源的路径，加载器将并发自动拉取同名 `.atlas` 和 `.png` 纹理集。
 
 ```javascript
-import SimpleSpine, { registerPIXI } from "simple-pixi-spine";
+import SimplePixiSpine, { registerPIXI } from "simple-pixi-spine";
 
 // 1. 显式注册 PIXI 实例 (若在全局 window 环境下则已自动挂载)
 registerPIXI(PIXI);
@@ -62,10 +62,10 @@ registerPIXI(PIXI);
 async function initSpine() {
     try {
         // 2. 外部路径加载 (支持自动侦测版本并映射为 3.8 标准渲染实例)
-        const spineData = await SimpleSpine.load("assets/spineboy-pro.skel");
+        const spineData = await SimplePixiSpine.load("assets/spineboy-pro.skel");
 
         // 3. 构建 PIXI.spine 渲染对象与调试辅助实例
-        const { spine: spineCharacter, debug: spineDebug } = SimpleSpine.spine(spineData);
+        const { spine: spineCharacter, debug: spineDebug } = SimplePixiSpine.spine(spineData);
 
         // 4. 调整位置并添加至舞台
         spineCharacter.x = 400;
@@ -86,7 +86,7 @@ async function initSpine() {
 如果资源的 `.skel`/`.json`、`.atlas` 以及图片存放在不同的 CDN 目录或使用不同的后缀，可以通过配置对象进行显式覆盖：
 
 ```javascript
-const spineData = await SimpleSpine.load({
+const spineData = await SimplePixiSpine.load({
     path: [
         "https://cdn.example.com/skeletons/hero_anim.skel", // 骨骼二进制数据路径
         "https://cdn.example.com/atlases/hero.atlas", // 图集配置路径
@@ -98,7 +98,7 @@ const spineData = await SimpleSpine.load({
 或者使用 `options` 选项进行单项覆盖：
 
 ```javascript
-const spineData = await SimpleSpine.load("assets/hero.json", {
+const spineData = await SimplePixiSpine.load("assets/hero.json", {
     atlasPath: "custom/hero.atlas",
     texturePath: "custom/images/",
 });
@@ -112,7 +112,7 @@ const spineData = await SimpleSpine.load("assets/hero.json", {
 const mySkelBuffer = new Uint8Array([...]).buffer; // 骨骼二进制数据
 const myAtlasText = "hero.png\nsize: 1024,256..."; // 图集配置文本
 
-const spineData = await SimpleSpine.load({
+const spineData = await SimplePixiSpine.load({
   skeletonData: mySkelBuffer,
   atlasData: myAtlasText,
   // 此时图集内定义的贴图 hero.png 会自动向 assets/ 目录下请求拉取
@@ -137,7 +137,7 @@ const atlasText = await atlasFile.text();
 // 创建图片的本地临时 Blob 链接
 const pngBlobUrl = URL.createObjectURL(pngFile);
 
-const spineData = await SimpleSpine.load({
+const spineData = await SimplePixiSpine.load({
     skeletonData: skelBuffer,
     atlasData: atlasText,
     // 显式传入本地图集图片的映射信息
@@ -155,7 +155,7 @@ const spineData = await SimpleSpine.load({
 在少数老旧骨骼资源版本信息损坏或无法被加载器自动检测出来时，可以通过 `options.version` 显式指定解析的版本（如强制作为 `38` 或 `41` 版本解析）：
 
 ```javascript
-const spineData = await SimpleSpine.load("assets/legacy_data.skel", {
+const spineData = await SimplePixiSpine.load("assets/legacy_data.skel", {
     version: "38", // 覆写自动检测，强制按 Spine v3.8 规范解析
 });
 ```
@@ -163,7 +163,7 @@ const spineData = await SimpleSpine.load("assets/legacy_data.skel", {
 ### 6. 骨骼调试线绘制
 
 ```javascript
-const { spine, debug } = SimpleSpine.spine(spineData);
+const { spine, debug } = SimplePixiSpine.spine(spineData);
 
 // 开启骨骼调试线和包围盒渲染
 spine.debug = debug;

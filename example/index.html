@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SimpleSpine Demo</title>
+    <title>SimplePixiSpine Demo</title>
     <style>
         body {
             margin: 0;
@@ -85,7 +85,7 @@
 <body>
 
     <div class="controls-bar">
-        <span class="title">SimpleSpine Demo</span>
+        <span class="title">SimplePixiSpine Demo</span>
         <div style="margin-left: 15px; display: flex; align-items: center;">
             <label for="spine-version" style="color: #94a3b8; font-size: 14px; margin-right: 8px; font-weight: 500;">骨骼版本:</label>
             <select id="spine-version" onchange="changeSpineVersion(this.value)" style="background: #1e293b; color: #fff; border: 1px solid #475569; padding: 6px 12px; border-radius: 6px; outline: none; cursor: pointer; font-size: 14px; font-weight: 500; transition: border-color 0.2s;">
@@ -114,7 +114,7 @@
 
     <!-- Load PixiJS v8 -->
     <script src="./pixi.min.js"></script>
-    <!-- Load SimpleSpine Bundle -->
+    <!-- Load SimplePixiSpine Bundle -->
     <script src="../dist/simple-pixi-spine.js"></script>
 
     <script>
@@ -137,8 +137,8 @@
             });
             container.appendChild(app.canvas);
 
-            // 必须显式向 SimpleSpine 注册全局 PIXI 实例
-            SimpleSpine.registerPIXI(PIXI);
+            // 必须显式向 SimplePixiSpine 注册全局 PIXI 实例
+            SimplePixiSpine.registerPIXI(PIXI);
 
             // 2. 加载当前选中的骨骼版本
             await changeSpineVersion(document.getElementById('spine-version').value);
@@ -174,11 +174,11 @@
             }
 
             try {
-                const res = await SimpleSpine.load(path);
+                const res = await SimplePixiSpine.load(path);
                 console.log(`Spine ${value} Loaded Success:`, res);
 
                 // 3. 创建 Spine 动画实例与骨骼调试渲染器
-                const spineInstanceObj = SimpleSpine.spine(res);
+                const spineInstanceObj = SimplePixiSpine.spine(res);
                 spineCharacter = spineInstanceObj.spine;
                 spineDebug = spineInstanceObj.debug;
 
