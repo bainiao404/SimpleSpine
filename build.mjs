@@ -41,7 +41,9 @@ const pixiGlobalsPlugin = {
         contents: `
           const proxy = new Proxy({}, {
             get(target, prop) {
+              if (prop === '__esModule') return true;
               const PIXI = (typeof window !== 'undefined' && window.PIXI) || (typeof global !== 'undefined' && global.PIXI);
+              if (prop === 'default') return PIXI || proxy;
               return PIXI ? PIXI[prop] : undefined;
             }
           });
