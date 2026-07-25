@@ -1,13 +1,15 @@
-# SimpleSpine
+# simple-pixi-spine
 
 <p align="center">
   <img src="https://img.shields.io/badge/Release-v1.0.0-blue.svg?style=flat-square" alt="Release">
   <img src="https://img.shields.io/badge/License-MIT-green.svg?style=flat-square" alt="License">
-  <img src="https://img.shields.io/badge/PixiJS-v7.x-orange.svg?style=flat-square" alt="PixiJS">
+  <img src="https://img.shields.io/badge/PixiJS-v8.x-orange.svg?style=flat-square" alt="PixiJS">
   <img src="https://img.shields.io/badge/TypeScript-Strict-blue.svg?style=flat-square" alt="TypeScript">
 </p>
 
-**SimpleSpine** 是面向 PixiJS v7 的多版本 Spine 动画兼容适配与加载封装库。
+> 当前分支为 **PixiJS v8** 环境分支。若使用的是 **PixiJS v7**，请跳转使用 **[main](https://github.com/bainiao404/simple-pixi-spine/tree/main)** 分支。
+
+**simple-pixi-spine** 是面向 PixiJS v8 的多版本 Spine 动画兼容适配与加载封装库。
 
 该项目旨在解决多版本 Spine 骨骼资源在前端加载时的版本冲突与 API 兼容问题。支持对 **Spine v2.1 至 v4.2** 导出的骨骼数据（包括 `.skel` 二进制及 `.json` 文本格式）进行**自动版本识别**与**向下兼容性转换**，为上层应用提供统一的调用接口。
 
@@ -39,8 +41,9 @@ npm run build
 ```
 
 编译产物包括：
-- `dist/simplespine.js`：适合在浏览器中使用 `<script>` 标签直接引入的 IIFE 格式文件（全局暴露 `SimpleSpine` 命名空间）。
-- `dist/simplespine.mjs`：适合 Vite / Webpack / ESM 模块化打包工具链的现代 ESM 包。
+
+- `dist/simple-pixi-spine.js`：适合在浏览器中使用 `<script>` 标签直接引入的 IIFE 格式文件（全局暴露 `SimpleSpine` 命名空间）。
+- `dist/simple-pixi-spine.mjs`：适合 Vite / Webpack / ESM 模块化打包工具链的现代 ESM 包。
 
 ---
 
@@ -51,30 +54,30 @@ npm run build
 通过指定骨骼资源的路径，加载器将并发自动拉取同名 `.atlas` 和 `.png` 纹理集。
 
 ```javascript
-import SimpleSpine, { registerPIXI } from 'simplespine';
+import SimpleSpine, { registerPIXI } from "simple-pixi-spine";
 
 // 1. 显式注册 PIXI 实例 (若在全局 window 环境下则已自动挂载)
 registerPIXI(PIXI);
 
 async function initSpine() {
-  try {
-    // 2. 外部路径加载 (支持自动侦测版本并映射为 3.8 标准渲染实例)
-    const spineData = await SimpleSpine.load('assets/spineboy-pro.skel');
-    
-    // 3. 构建 PIXI.spine 渲染对象与调试辅助实例
-    const { spine: spineCharacter, debug: spineDebug } = SimpleSpine.spine(spineData);
-    
-    // 4. 调整位置并添加至舞台
-    spineCharacter.x = 400;
-    spineCharacter.y = 600;
-    spineCharacter.scale.set(0.5);
-    app.stage.addChild(spineCharacter);
+    try {
+        // 2. 外部路径加载 (支持自动侦测版本并映射为 3.8 标准渲染实例)
+        const spineData = await SimpleSpine.load("assets/spineboy-pro.skel");
 
-    // 5. 播放指定动画
-    spineCharacter.state.setAnimation(0, 'walk', true);
-  } catch (error) {
-    console.error('Spine 加载失败:', error);
-  }
+        // 3. 构建 PIXI.spine 渲染对象与调试辅助实例
+        const { spine: spineCharacter, debug: spineDebug } = SimpleSpine.spine(spineData);
+
+        // 4. 调整位置并添加至舞台
+        spineCharacter.x = 400;
+        spineCharacter.y = 600;
+        spineCharacter.scale.set(0.5);
+        app.stage.addChild(spineCharacter);
+
+        // 5. 播放指定动画
+        spineCharacter.state.setAnimation(0, "walk", true);
+    } catch (error) {
+        console.error("Spine 加载失败:", error);
+    }
 }
 ```
 
@@ -84,20 +87,20 @@ async function initSpine() {
 
 ```javascript
 const spineData = await SimpleSpine.load({
-  path: [
-    'https://cdn.example.com/skeletons/hero_anim.skel', // 骨骼二进制数据路径
-    'https://cdn.example.com/atlases/hero.atlas',       // 图集配置路径
-    'https://cdn.example.com/textures/'                 // 图片纹理基础 CDN 目录
-  ]
+    path: [
+        "https://cdn.example.com/skeletons/hero_anim.skel", // 骨骼二进制数据路径
+        "https://cdn.example.com/atlases/hero.atlas", // 图集配置路径
+        "https://cdn.example.com/textures/", // 图片纹理基础 CDN 目录
+    ],
 });
 ```
 
 或者使用 `options` 选项进行单项覆盖：
 
 ```javascript
-const spineData = await SimpleSpine.load('assets/hero.json', {
-  atlasPath: 'custom/hero.atlas',
-  texturePath: 'custom/images/'
+const spineData = await SimpleSpine.load("assets/hero.json", {
+    atlasPath: "custom/hero.atlas",
+    texturePath: "custom/images/",
 });
 ```
 
@@ -123,9 +126,9 @@ const spineData = await SimpleSpine.load({
 
 ```javascript
 // 假设通过 <input type="file" multiple> 获取到了本地文件对象
-const skelFile = files.find(f => f.name.endsWith('.skel'));
-const atlasFile = files.find(f => f.name.endsWith('.atlas'));
-const pngFile = files.find(f => f.name.endsWith('.png'));
+const skelFile = files.find((f) => f.name.endsWith(".skel"));
+const atlasFile = files.find((f) => f.name.endsWith(".atlas"));
+const pngFile = files.find((f) => f.name.endsWith(".png"));
 
 // 读取骨骼和图集数据
 const skelBuffer = await skelFile.arrayBuffer();
@@ -135,15 +138,15 @@ const atlasText = await atlasFile.text();
 const pngBlobUrl = URL.createObjectURL(pngFile);
 
 const spineData = await SimpleSpine.load({
-  skeletonData: skelBuffer,
-  atlasData: atlasText,
-  // 显式传入本地图集图片的映射信息
-  textureData: [
-    {
-      name: pngFile.name, // 对应图集文本第二行定义的图片名称 (如 'hero.png')
-      src: pngBlobUrl     // 本地 Blob URL 
-    }
-  ]
+    skeletonData: skelBuffer,
+    atlasData: atlasText,
+    // 显式传入本地图集图片的映射信息
+    textureData: [
+        {
+            name: pngFile.name, // 对应图集文本第二行定义的图片名称 (如 'hero.png')
+            src: pngBlobUrl, // 本地 Blob URL
+        },
+    ],
 });
 ```
 
@@ -152,8 +155,8 @@ const spineData = await SimpleSpine.load({
 在少数老旧骨骼资源版本信息损坏或无法被加载器自动检测出来时，可以通过 `options.version` 显式指定解析的版本（如强制作为 `38` 或 `41` 版本解析）：
 
 ```javascript
-const spineData = await SimpleSpine.load('assets/legacy_data.skel', {
-  version: '38' // 覆写自动检测，强制按 Spine v3.8 规范解析
+const spineData = await SimpleSpine.load("assets/legacy_data.skel", {
+    version: "38", // 覆写自动检测，强制按 Spine v3.8 规范解析
 });
 ```
 
