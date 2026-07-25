@@ -115,28 +115,6 @@ async function build() {
   console.log('✓ Created IIFE Script: dist/simplespine.js');
 
   console.log(`✨ Build finished in ${Date.now() - startTime}ms`);
-
-  // Auto-export to FennecView
-  const fennecViewDestDir = 'D:/Project/FennecView-Develop/appOriginal/FennecView/src/assets/SimpleSpineNext';
-  const parentDir = path.dirname(fennecViewDestDir);
-  if (fs.existsSync(parentDir)) {
-    console.log(`\n📦 Exporting to FennecView: ${fennecViewDestDir}`);
-    if (!fs.existsSync(fennecViewDestDir)) {
-      fs.mkdirSync(fennecViewDestDir, { recursive: true });
-    }
-    fs.copyFileSync('dist/simplespine.mjs', path.join(fennecViewDestDir, 'simplespine.mjs'));
-    fs.copyFileSync('dist/simplespine.js', path.join(fennecViewDestDir, 'simplespine.js'));
-    fs.copyFileSync('dist/simplespine.mjs.map', path.join(fennecViewDestDir, 'simplespine.mjs.map'));
-    fs.copyFileSync('dist/simplespine.js.map', path.join(fennecViewDestDir, 'simplespine.js.map'));
-    
-    // Write index.js bridge
-    const indexJsContent = `import SimpleSpine from './simplespine.mjs';
-export * from './simplespine.mjs';
-export default SimpleSpine;
-`;
-    fs.writeFileSync(path.join(fennecViewDestDir, 'index.js'), indexJsContent, 'utf8');
-    console.log('✓ Successfully exported to FennecView!');
-  }
 }
 
 build().catch((err) => {
