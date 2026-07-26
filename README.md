@@ -45,6 +45,26 @@ npm run build
 - `dist/simple-pixi-spine.js`：适合在浏览器中使用 `<script>` 标签直接引入的 IIFE 格式文件（全局暴露 `SimplePixiSpine` 命名空间）。
 - `dist/simple-pixi-spine.mjs`：适合 Vite / Webpack / ESM 模块化打包工具链的现代 ESM 包。
 
+### 2. NPM 安装引入
+
+本仓库已发布至 NPM。推荐在支持打包工具（如 Vite、Webpack 等）的现代前端项目中直接通过 npm 安装：
+
+```bash
+npm install simple-pixi-spine@pixi8
+```
+
+并在代码中导入使用：
+
+```javascript
+import SimplePixiSpine, { registerPIXI } from "simple-pixi-spine";
+
+// 显式注册 PIXI 实例（通常在初始化 PixiJS Application 后执行）
+registerPIXI(PIXI);
+```
+
+> [!IMPORTANT]
+> `simple-pixi-spine` 将 `pixi.js` 声明为 `peerDependencies`。安装前请确保您的项目已安装 `pixi.js`（v8.x）。
+
 ---
 
 ## 使用示例
