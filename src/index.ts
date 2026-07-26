@@ -423,6 +423,14 @@ export async function load(src: string | object | MemorySpineSource, options: an
             skeletonData = skelRes.data;
             atlasData = atlasRes.data;
             textureData = prepareTextureData(atlasData, srcs.texturePath || srcs.path[2]);
+            if (srcs.textures) {
+                textureData.forEach((tex) => {
+                    const mappedSrc = srcs.textures[tex.name] || srcs.textures[tex.name.replace(/\.(png|jpg|jpeg|webp)$/i, '')];
+                    if (mappedSrc) {
+                        tex.src = mappedSrc;
+                    }
+                });
+            }
             
             version = detectSpineVersion({
                 data: skeletonData,
