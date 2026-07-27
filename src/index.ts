@@ -157,6 +157,7 @@ function _loadBaseTexture(url: string): Promise<any> {
         if (!pixi) {
             return reject(new Error('PIXI 实例不存在，请确保已加载 PixiJS 或通过 registerPIXI() 注册'));
         }
+        // 注：与 v8 不同，v7 下 BaseTexture.from(url) 内部通过 ImageResource 自动支持 Blob 链接加载，无需手动强制指定 textures 解析器。
         const bt = pixi.BaseTexture.from(url);
         if (bt.valid) return resolve(bt);
         bt.once('loaded', () => resolve(bt));
@@ -308,7 +309,7 @@ export async function processSpineData(params: any): Promise<any> {
     let originalSpine: any = null;
 
     const checkType = (val: any) => {
-        if (val instanceof ArrayBuffer) return 'skel';
+        if (val instanceof ArrayBuffer || val instanceof Uint8Array) return 'skel';
         if (typeof val === 'string') return 'json';
         return 'obj';
     };
@@ -437,7 +438,7 @@ export function spine(spineData: any): any {
         throw new Error('未加载 PIXI.spine 插件或未通过 registerPIXI() 注册');
     }
 
-    const isV42 = spineData.version === '42' || spineData.version === 42;
+    const isV42 = spineData.version === '42' || spineData.version === 42 || spineData.version === '43' || spineData.version === 43;
     const sdk = isV42 ? pixi.spine.spine42 : pixi.spine;
 
     const spineInstance = isV42 ? new sdk.Spine({ skeletonData: spineData.spine }) : new sdk.Spine(spineData.spine);
