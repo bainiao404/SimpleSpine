@@ -164,7 +164,7 @@ const spineData = await SimplePixiSpine.load({
     textureData: [
         {
             name: pngFile.name, // 对应图集文本第二行定义的图片名称 (如 'hero.png')
-            src: pngBlobUrl, // 本地 Blob URL
+            src: pngBlobUrl,    // 本地 Blob URL
         },
     ],
 });

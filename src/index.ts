@@ -156,6 +156,13 @@ async function _loadBaseTexture(url: string): Promise<any> {
     if (!pixi) {
         throw new Error('PIXI 实例不存在，请确保已加载 PixiJS 或通过 registerPIXI() 注册');
     }
+    // 兼容 v8 下 Blob 链接无后缀导致的图片纹理自动解析失败问题
+    if (url.startsWith('blob:')) {
+        return await pixi.Assets.load({
+            src: url,
+            loadParser: 'loadTextures'
+        });
+    }
     return await pixi.Assets.load(url);
 }
 
@@ -337,7 +344,7 @@ export async function processSpineData(params: any): Promise<any> {
     let originalSpine: any = null;
 
     const checkType = (val: any) => {
-        if (val instanceof ArrayBuffer) return 'skel';
+        if (val instanceof ArrayBuffer || val instanceof Uint8Array) return 'skel';
         if (typeof val === 'string') return 'json';
         return 'obj';
     };
