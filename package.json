@@ -38,5 +38,27 @@
     "@pixi/assets": "^7.4.2",
     "esbuild": "^0.19.11",
     "typescript": "5.4.2"
+  },
+  "keywords": [
+    "spine",
+    "pixi",
+    "pixijs",
+    "spine-pixi",
+    "wrapper",
+    "runtime",
+    "web"
+  ],
+  "author": "bainiao404",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bainiao404/simple-pixi-spine.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bainiao404/simple-pixi-spine/issues"
+  },
+  "homepage": "https://github.com/bainiao404/simple-pixi-spine#readme",
+  "publishConfig": {
+    "access": "public"
   }
 }
