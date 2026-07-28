@@ -1,6 +1,6 @@
 /*!
  * simple-pixi-spine - v4.0.4
- * Compiled Tue, 28 Jul 2026 14:25:52 UTC
+ * Compiled Tue, 28 Jul 2026 14:33:10 UTC
  *
  * Integrated spine-pixi runtime with SimplePixiSpine wrapper.
  * All rights reserved.
