@@ -12,6 +12,10 @@ let PIXIInstance: any = null;
  */
 export function registerPIXI(pixi: any): void {
     PIXIInstance = pixi;
+    if (pixi) {
+        pixi.spine = pixi.spine || {};
+        Object.assign(pixi.spine, pixiSpine);
+    }
     // 如果有全局 window，也将它的 PIXI.spine 补全
     if (typeof window !== 'undefined') {
         const w = window as any;
@@ -146,17 +150,19 @@ export function prepareTextureData(atlasData: string, textureBasePath: string): 
     });
 }
 
-/**
- * 内部辅助：Promise 化的 BaseTexture 加载器
- * @private
- * @param url - 纹理图片 URL 地址
- */
-function _loadBaseTexture(url: string): Promise<any> {
+async function _loadBaseTexture(url: string): Promise<any> {
+    const pixi = getPIXI();
+    if (!pixi) {
+        throw new Error('PIXI 实例不存在，请确保已加载 PixiJS 或通过 registerPIXI() 注册');
+    }
+    
+    // 如果 Assets 已注册（如在 @pixi/node 环境下），优先使用 Assets 加载以利用 Node.js 专用的 LoadParser
+    if (pixi.Assets && pixi.Assets.load) {
+        const tex = await pixi.Assets.load(url);
+        return tex.baseTexture || tex;
+    }
+
     return new Promise((resolve, reject) => {
-        const pixi = getPIXI();
-        if (!pixi) {
-            return reject(new Error('PIXI 实例不存在，请确保已加载 PixiJS 或通过 registerPIXI() 注册'));
-        }
         // 注：与 v8 不同，v7 下 BaseTexture.from(url) 内部通过 ImageResource 自动支持 Blob 链接加载，无需手动强制指定 textures 解析器。
         const bt = pixi.BaseTexture.from(url);
         if (bt.valid) return resolve(bt);

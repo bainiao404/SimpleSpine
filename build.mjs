@@ -114,6 +114,26 @@ async function build() {
   });
   console.log('✓ Created IIFE Script: dist/simple-pixi-spine.js');
 
+  // 3. Build Node.js ESM module (.mjs) - Alias @pixi/* to @pixi/node
+  await esbuild.build({
+    ...baseConfig,
+    minify: false,
+    platform: 'node',
+    format: 'esm',
+    plugins: [
+      {
+        name: 'pixi-node-alias',
+        setup(build) {
+          build.onResolve({ filter: /^@pixi\// }, args => {
+            return { path: '@pixi/node', external: true };
+          });
+        }
+      }
+    ],
+    outfile: 'dist/simple-pixi-spine-node.mjs',
+  });
+  console.log('✓ Created Node ESM Bundle: dist/simple-pixi-spine-node.mjs');
+
   console.log(`✨ Build finished in ${Date.now() - startTime}ms`);
 }
 
