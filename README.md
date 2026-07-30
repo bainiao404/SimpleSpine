@@ -194,6 +194,24 @@ spine.debug = debug;
 spine.debug = null;
 ```
 
+### 7. 预乘贴图（Premultiplied Alpha）设置
+
+为了解决 Spine 渲染时常见的黑边（预乘未正确匹配）或透明度异常问题，加载返回的 `spineData` 提供了一个通用的 `.setPremultiplied(isP?: boolean)` 配置方法：
+
+```javascript
+const spineData = await SimplePixiSpine.load("assets/character.skel");
+
+// 方式 A：自动识别检测（推荐）
+// 库会通过采样首张纹理首像素的 RGBA 分量，自动检测贴图是否为预乘纹理并应用对应的 alphaMode
+spineData.setPremultiplied();
+
+// 方式 B：强行开启预乘贴图设置 (Premultiplied Alpha)
+spineData.setPremultiplied(true);
+
+// 方式 C：强行关闭预乘贴图设置，采用直出贴图 (Straight Alpha)
+spineData.setPremultiplied(false);
+```
+
 ---
 
 ## Node.js (离线渲染/服务端) 支持
