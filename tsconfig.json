@@ -39,6 +39,10 @@
     },
     "exclude": [
         "node_modules",
+        "dist",
+        "example",
+        "*.mjs",
+        "*.js",
         "**/dist/**",
         "**/lib/**",
         "**/test/**",

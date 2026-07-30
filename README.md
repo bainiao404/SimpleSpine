@@ -227,7 +227,7 @@ npm install @pixi/node@^7.3.0 canvas gl @xmldom/xmldom cross-fetch
 
 ### 2. 导入与初始化说明
 1. **声明浏览器特征**：由于 PixiJS 内部在加载时会立刻检测浏览器特征，在 Node 环境中执行 `import` 前**必须**先声明 `globalThis.navigator`，避免导入抛出 `navigator is not defined` 异常。
-2. **注册全局实例**：使用 `registerPIXI(PIXI)` 接口将 `@pixi/node` 实例注册给库。由于 Node 中直接导入的 Module 命名空间是不可写的，需要先创建一个浅拷贝的 mutable `PIXI` 对象再调用注册。
+2. **注册全局实例**：使用 `const PIXI = registerPIXI(PIXI_ORIG)` 接口将 `@pixi/node` 实例注册给库。由于 Node 中直接导入 the Module 命名空间是只读不可修改的，`registerPIXI` 在内部会自动检测并为其创建浅拷贝的可写代理对象，挂载 Spine 运行时的同时将该可写实例返回，方便后续直接使用。
 
 ### 3. Node.js (v7) 离线渲染完整示例
 
@@ -241,15 +241,8 @@ const fs = await import('fs');
 const path = await import('path');
 
 async function renderSpine() {
-    // 2. 创建可写的 PIXI 代理对象并注册
-    const PIXI = {};
-    for (const key of Object.getOwnPropertyNames(PIXI_ORIG)) {
-        const desc = Object.getOwnPropertyDescriptor(PIXI_ORIG, key);
-        if (desc) Object.defineProperty(PIXI, key, desc);
-    }
-    
-    // 注册实例（自动完成 Node 环境下 PIXI.spine 各版本运行时的初始化挂载）
-    SimplePixiSpine.registerPIXI(PIXI);
+    // 2. 注册并获取可写的 PIXI 实例（内部自动创建 ESM 代理对象并挂载 PIXI.spine）
+    const PIXI = SimplePixiSpine.registerPIXI(PIXI_ORIG);
 
     // 3. 初始化 Pixi Application (v7 同步构造器语法)
     const app = new PIXI.Application({
