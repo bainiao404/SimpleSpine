@@ -1,6 +1,6 @@
 /*!
  * simple-pixi-spine - v4.0.4
- * Compiled Thu, 30 Jul 2026 14:49:11 UTC
+ * Compiled Thu, 30 Jul 2026 15:30:43 UTC
  *
  * Integrated spine-pixi runtime with SimplePixiSpine wrapper.
  * All rights reserved.
@@ -1751,7 +1751,6 @@ var SpineBase = class extends Container {
     const poly = new Polygon([]);
     graphics.clear();
     graphics.poly(poly).fill({ color: 16777215, alpha: 1 });
-    graphics.renderable = false;
     slot.currentGraphics = graphics;
     slot.clippingContainer = this.newContainer();
     slot.clippingContainer.mask = slot.currentGraphics;

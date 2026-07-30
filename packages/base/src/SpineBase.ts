@@ -613,7 +613,6 @@ export abstract class SpineBase<
 
         graphics.clear();
         graphics.poly(poly as any).fill({ color: 0xffffff, alpha: 1 });
-        graphics.renderable = false;
         slot.currentGraphics = graphics;
         slot.clippingContainer = this.newContainer();
         slot.clippingContainer.mask = slot.currentGraphics;
