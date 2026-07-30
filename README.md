@@ -236,7 +236,7 @@ npm install @pixi/node@^7.3.0 canvas gl @xmldom/xmldom cross-fetch
 globalThis.navigator = { userAgent: 'node' };
 
 const PIXI_ORIG = await import('@pixi/node');
-const { default: SimplePixiSpine } = await import('simple-pixi-spine/dist/simple-pixi-spine-node.mjs');
+const { default: SimplePixiSpine } = await import('simple-pixi-spine');
 const fs = await import('fs');
 const path = await import('path');
 

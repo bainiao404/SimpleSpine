@@ -8,6 +8,9 @@
     "exports": {
         ".": {
             "types": "./dist/types/src/index.d.ts",
+            "node": {
+                "import": "./dist/simple-pixi-spine-node.mjs"
+            },
             "import": "./dist/simple-pixi-spine.mjs",
             "require": "./dist/simple-pixi-spine.js"
         }
