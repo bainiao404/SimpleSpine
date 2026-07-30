@@ -12,6 +12,10 @@ let PIXIInstance: any = null;
  */
 export function registerPIXI(pixi: any): void {
     PIXIInstance = pixi;
+    if (pixi) {
+        pixi.spine = pixi.spine || {};
+        Object.assign(pixi.spine, pixiSpine);
+    }
     // 如果有全局 window，也将它的 PIXI.spine 补全
     if (typeof window !== 'undefined') {
         const w = window as any;

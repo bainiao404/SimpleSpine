@@ -1,51 +1,55 @@
 {
-  "name": "simple-pixi-spine",
-  "version": "0.1.3-pixi8",
-  "description": "Unified spine-pixi runtime with SimplePixiSpine wrapper built using Esbuild",
-  "main": "./dist/simple-pixi-spine.js",
-  "module": "./dist/simple-pixi-spine.mjs",
-  "types": "./dist/types/src/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/types/src/index.d.ts",
-      "import": "./dist/simple-pixi-spine.mjs",
-      "require": "./dist/simple-pixi-spine.js"
+    "name": "simple-pixi-spine",
+    "version": "0.1.4-pixi8",
+    "description": "Unified spine-pixi runtime with SimplePixiSpine wrapper built using Esbuild",
+    "main": "./dist/simple-pixi-spine.js",
+    "module": "./dist/simple-pixi-spine.mjs",
+    "types": "./dist/types/src/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/types/src/index.d.ts",
+            "import": "./dist/simple-pixi-spine.mjs",
+            "require": "./dist/simple-pixi-spine.js"
+        }
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "node build.mjs && tsc"
+    },
+    "peerDependencies": {
+        "pixi.js": "^8.2.3"
+    },
+    "devDependencies": {
+        "@esotericsoftware/spine-pixi-v8": "^4.2.53",
+        "esbuild": "^0.19.11",
+        "typescript": "5.4.2"
+    },
+    "keywords": [
+        "spine",
+        "pixi",
+        "pixijs",
+        "spine-pixi",
+        "wrapper",
+        "runtime",
+        "web"
+    ],
+    "author": "bainiao404",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/bainiao404/simple-pixi-spine.git"
+    },
+    "bugs": {
+        "url": "https://github.com/bainiao404/simple-pixi-spine/issues"
+    },
+    "homepage": "https://github.com/bainiao404/simple-pixi-spine#readme",
+    "publishConfig": {
+        "access": "public"
+    },
+    "dependencies": {
+        "@pixi/node": "^8.0.0",
+        "puppeteer-core": "^24.43.1"
     }
-  },
-  "files": [
-    "dist"
-  ],
-  "scripts": {
-    "build": "node build.mjs && tsc"
-  },
-  "peerDependencies": {
-    "pixi.js": "^8.2.3"
-  },
-  "devDependencies": {
-    "@esotericsoftware/spine-pixi-v8": "^4.2.53",
-    "esbuild": "^0.19.11",
-    "typescript": "5.4.2"
-  },
-  "keywords": [
-    "spine",
-    "pixi",
-    "pixijs",
-    "spine-pixi",
-    "wrapper",
-    "runtime",
-    "web"
-  ],
-  "author": "bainiao404",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/bainiao404/simple-pixi-spine.git"
-  },
-  "bugs": {
-    "url": "https://github.com/bainiao404/simple-pixi-spine/issues"
-  },
-  "homepage": "https://github.com/bainiao404/simple-pixi-spine#readme",
-  "publishConfig": {
-    "access": "public"
-  }
 }

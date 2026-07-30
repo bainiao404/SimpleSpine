@@ -44,6 +44,7 @@ npm run build
 
 - `dist/simple-pixi-spine.js`：适合在浏览器中使用 `<script>` 标签直接引入的 IIFE 格式文件（全局暴露 `SimplePixiSpine` 命名空间）。
 - `dist/simple-pixi-spine.mjs`：适合 Vite / Webpack / ESM 模块化打包工具链的现代 ESM 包。
+- `dist/simple-pixi-spine-node.mjs`：适合 Node.js 环境的 ESM 包，内部依赖已被替换绑定至 `@pixi/node`。
 
 ### 2. NPM 安装引入
 
@@ -190,6 +191,100 @@ spine.debug = debug;
 
 // 关闭调试线
 spine.debug = null;
+```
+
+---
+
+## Node.js (离线渲染/服务端) 支持
+
+`simple-pixi-spine` 完整支持在 Node.js 环境下运行（例如进行服务器端渲染 (SSR)、自动化离线渲染出图或单元测试）。
+
+### 1. 安装 Node.js 适配库
+在 Node.js 环境中渲染需要使用官方提供的 `@pixi/node` 库（它在 Node 环境中提供了底层的 WebGL/Canvas 环境与 DOM Polyfills）：
+
+```bash
+npm install @pixi/node canvas gl @xmldom/xmldom cross-fetch
+```
+
+### 2. 导入与初始化说明
+1. **声明浏览器特征**：由于 PixiJS 内部在加载时会立刻检测浏览器特征，在 Node 环境中执行 `import` 前**必须**先声明 `globalThis.navigator`，避免导入抛出 `navigator is not defined` 异常。
+2. **注册全局实例**：使用 `registerPIXI(PIXI)` 接口将 `@pixi/node` 实例注册给库。由于 Node 中直接导入的 Module 命名空间是不可写的，需要先创建一个浅拷贝的 mutable `PIXI` 对象再调用注册。
+
+### 3. Node.js 离线渲染完整示例
+
+```javascript
+// 1. 声明浏览器特征（必须在导入 @pixi/node 之前执行）
+globalThis.navigator = { userAgent: 'node' };
+
+const PIXI_ORIG = await import('@pixi/node');
+const { default: SimplePixiSpine } = await import('simple-pixi-spine/dist/simple-pixi-spine-node.mjs');
+const fs = await import('fs');
+const path = await import('path');
+
+async function renderSpine() {
+    // 2. 创建可写的 PIXI 代理对象并注册
+    const PIXI = {};
+    for (const key of Object.getOwnPropertyNames(PIXI_ORIG)) {
+        const desc = Object.getOwnPropertyDescriptor(PIXI_ORIG, key);
+        if (desc) Object.defineProperty(PIXI, key, desc);
+    }
+    
+    // 注册实例（自动完成 Node 环境下 PIXI.spine 各版本运行时的初始化挂载）
+    SimplePixiSpine.registerPIXI(PIXI);
+
+    // 3. 初始化 Pixi Application
+    const app = new PIXI.Application();
+    await app.init({
+        width: 1024,
+        height: 1024,
+        backgroundAlpha: 0, // 透明背景
+        antialias: true,
+    });
+
+    // 初始化 Node 资源加载器
+    await PIXI.Assets.init();
+
+    // 4. 从本地磁盘读取骨骼和图集数据 (Memory Load 模式)
+    const spineDir = './assets/spine_character';
+    const skelData = fs.readFileSync(path.join(spineDir, 'character.skel'));
+    const atlasData = fs.readFileSync(path.join(spineDir, 'character.atlas'), 'utf-8');
+
+    const spineData = await SimplePixiSpine.load({
+        skeletonData: skelData,
+        atlasData: atlasData,
+        texturePath: spineDir + '/' // 本地贴图所在的目录路径，末尾须带斜杠 '/'
+    });
+
+    // 5. 实例化骨骼并添加到舞台
+    const spineInstanceObj = SimplePixiSpine.spine(spineData);
+    const char = spineInstanceObj.spine;
+    
+    // 关闭自动更新以便手动控制渲染的帧
+    char.autoUpdate = false;
+    
+    // 设置位置和大小
+    char.x = 512;
+    char.y = 900;
+    char.scale.set(0.5);
+    app.stage.addChild(char);
+
+    // 播放 walk 动画
+    char.state.setAnimation(0, 'walk', true);
+    
+    // 6. 手动步进动画并渲染 (如步进 0.5 秒)
+    char.update(0.5);
+    app.renderer.render(app.stage);
+
+    // 7. 将 Node.js Canvas 导出为本地 PNG 文件
+    const pngBuffer = app.canvas.toBuffer('image/png');
+    fs.writeFileSync('output_char.png', pngBuffer);
+    console.log('Saved rendered frame to output_char.png');
+
+    // 销毁实例释放内存
+    app.destroy(true, { children: true });
+}
+
+renderSpine().catch(console.error);
 ```
 
 ---
