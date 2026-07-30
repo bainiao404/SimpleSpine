@@ -156,12 +156,19 @@ async function _loadBaseTexture(url: string): Promise<any> {
     if (!pixi) {
         throw new Error('PIXI 实例不存在，请确保已加载 PixiJS 或通过 registerPIXI() 注册');
     }
-    // 兼容 v8 下 Blob 链接无后缀导致的图片纹理自动解析失败问题
-    if (url.startsWith('blob:')) {
-        return await pixi.Assets.load({
-            src: url,
-            loadParser: 'loadTextures'
+    // 兼容 v8 下 Blob 链接无后缀导致的图片纹理自动解析失败问题，以及 file:// 协议下 Blob (blob:null) 跨域 fetch 失败问题
+    if (typeof window !== 'undefined' && url.startsWith('blob:')) {
+        const img = new Image();
+        await new Promise<void>((resolve, reject) => {
+            img.onload = () => resolve();
+            img.onerror = () => reject(new Error(`Failed to load image from blob URL: ${url}`));
+            img.src = url;
         });
+        const SourceClass = pixi.ImageSource || pixi.TextureSource;
+        const source = new SourceClass({
+            resource: img
+        });
+        return new pixi.Texture({ source });
     }
     return await pixi.Assets.load(url);
 }
