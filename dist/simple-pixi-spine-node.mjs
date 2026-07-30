@@ -1,6 +1,6 @@
 /*!
  * simple-pixi-spine - v4.0.4
- * Compiled Thu, 30 Jul 2026 15:30:43 UTC
+ * Compiled Thu, 30 Jul 2026 16:01:32 UTC
  *
  * Integrated spine-pixi runtime with SimplePixiSpine wrapper.
  * All rights reserved.
@@ -51500,17 +51500,28 @@ function premultipliedToStraight(rgbaArray) {
 // src/index.ts
 var PIXIInstance = null;
 function registerPIXI(pixi) {
-  PIXIInstance = pixi;
-  if (pixi) {
-    pixi.spine = pixi.spine || {};
-    Object.assign(pixi.spine, src_exports5);
+  let targetPixi = pixi;
+  if (pixi && !Object.isExtensible(pixi)) {
+    targetPixi = {};
+    for (const key of Object.getOwnPropertyNames(pixi)) {
+      const desc = Object.getOwnPropertyDescriptor(pixi, key);
+      if (desc) {
+        Object.defineProperty(targetPixi, key, desc);
+      }
+    }
+  }
+  PIXIInstance = targetPixi;
+  if (targetPixi) {
+    targetPixi.spine = targetPixi.spine || {};
+    Object.assign(targetPixi.spine, src_exports5);
   }
   if (typeof window !== "undefined") {
     const w = window;
-    w.PIXI = w.PIXI || pixi;
+    w.PIXI = w.PIXI || targetPixi;
     w.PIXI.spine = w.PIXI.spine || {};
     Object.assign(w.PIXI.spine, src_exports5);
   }
+  return targetPixi;
 }
 function getPIXI() {
   return PIXIInstance || (typeof window !== "undefined" ? window.PIXI : null);

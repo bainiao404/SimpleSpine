@@ -13,15 +13,8 @@ const path = await import('path');
 
 async function run() {
     try {
-        console.log('1. 创建可写的 PIXI 代理对象并注册...');
-        const PIXI = {};
-        for (const key of Object.getOwnPropertyNames(PIXI_ORIG)) {
-            const desc = Object.getOwnPropertyDescriptor(PIXI_ORIG, key);
-            if (desc) {
-                Object.defineProperty(PIXI, key, desc);
-            }
-        }
-        SimplePixiSpine.registerPIXI(PIXI);
+        console.log('1. 注册 PIXI 实例 (内部自动处理 ESM 只读代理)...');
+        const PIXI = SimplePixiSpine.registerPIXI(PIXI_ORIG);
 
         console.log('2. 初始化 Pixi v8 Application...');
         const app = new PIXI.Application();

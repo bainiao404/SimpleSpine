@@ -2,7 +2,7 @@
  * 显式注册 PIXI 实例，以便在非浏览器/无全局 window 的环境下运行（如 SSR 或单元测试）
  * @param pixi - PIXI 实例
  */
-export declare function registerPIXI(pixi: any): void;
+export declare function registerPIXI(pixi: any): any;
 /**
  * 获取当前的 PIXI 实例
  */

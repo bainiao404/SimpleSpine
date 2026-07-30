@@ -10,19 +10,30 @@ let PIXIInstance: any = null;
  * 显式注册 PIXI 实例，以便在非浏览器/无全局 window 的环境下运行（如 SSR 或单元测试）
  * @param pixi - PIXI 实例
  */
-export function registerPIXI(pixi: any): void {
-    PIXIInstance = pixi;
-    if (pixi) {
-        pixi.spine = pixi.spine || {};
-        Object.assign(pixi.spine, pixiSpine);
+export function registerPIXI(pixi: any): any {
+    let targetPixi = pixi;
+    if (pixi && !Object.isExtensible(pixi)) {
+        targetPixi = {};
+        for (const key of Object.getOwnPropertyNames(pixi)) {
+            const desc = Object.getOwnPropertyDescriptor(pixi, key);
+            if (desc) {
+                Object.defineProperty(targetPixi, key, desc);
+            }
+        }
+    }
+    PIXIInstance = targetPixi;
+    if (targetPixi) {
+        targetPixi.spine = targetPixi.spine || {};
+        Object.assign(targetPixi.spine, pixiSpine);
     }
     // 如果有全局 window，也将它的 PIXI.spine 补全
     if (typeof window !== 'undefined') {
         const w = window as any;
-        w.PIXI = w.PIXI || pixi;
+        w.PIXI = w.PIXI || targetPixi;
         w.PIXI.spine = w.PIXI.spine || {};
         Object.assign(w.PIXI.spine, pixiSpine);
     }
+    return targetPixi;
 }
 
 /**
