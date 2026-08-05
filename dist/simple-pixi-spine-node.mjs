@@ -1,6 +1,6 @@
 /*!
  * simple-pixi-spine - v4.0.4
- * Compiled Thu, 30 Jul 2026 16:01:32 UTC
+ * Compiled Wed, 05 Aug 2026 16:54:57 UTC
  *
  * Integrated spine-pixi runtime with SimplePixiSpine wrapper.
  * All rights reserved.
@@ -1311,6 +1311,7 @@ var settings = {
 // packages/base/src/SpineBase.ts
 import { Polygon, Matrix, Container, Graphics, MeshSimple as SimpleMesh, Sprite, Ticker, Color as PixiColor } from "@pixi/node";
 var tempRgb = [0, 0, 0];
+var blendModeMap = ["normal", "add", "multiply", "screen"];
 var SpineSprite = class extends Sprite {
   constructor() {
     super(...arguments);
@@ -1528,7 +1529,7 @@ var SpineBase = class extends Container {
             tempRgb[2] = light[2] * slot.color.b * attColor.b;
             slot.currentSprite.tint = new PixiColor(tempRgb).toNumber();
           }
-          slot.currentSprite.blendMode = slot.blendMode;
+          slot.currentSprite.blendMode = blendModeMap[slot.blendMode] || "normal";
           break;
         case 2 /* Mesh */:
           slotContainer.setFromMatrix(Matrix.IDENTITY);
@@ -1570,7 +1571,7 @@ var SpineBase = class extends Container {
             tempRgb[2] = light[2] * slot.color.b * attColor.b;
             slot.currentMesh.tint = new PixiColor(tempRgb).toNumber();
           }
-          slot.currentMesh.blendMode = slot.blendMode;
+          slot.currentMesh.blendMode = blendModeMap[slot.blendMode] || "normal";
           if (!slot.hackRegion) {
             this.setMeshRegion(attachment, slot.currentMesh, region);
           }

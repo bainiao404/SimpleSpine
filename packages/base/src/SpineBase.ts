@@ -11,6 +11,7 @@ import type { IAttachment, IClippingAttachment, IMeshAttachment, IRegionAttachme
 import type { ISpineDebugRenderer } from './SpineDebugRenderer';
 
 const tempRgb = [0, 0, 0];
+const blendModeMap = ['normal', 'add', 'multiply', 'screen'];
 
 /**
  * @public
@@ -335,7 +336,7 @@ export abstract class SpineBase<
                         tempRgb[2] = light[2] * slot.color.b * attColor.b;
                         slot.currentSprite.tint = new PixiColor(tempRgb).toNumber();
                     }
-                    slot.currentSprite.blendMode = slot.blendMode;
+                    slot.currentSprite.blendMode = blendModeMap[slot.blendMode] || 'normal';
                     break;
 
                 case AttachmentType.Mesh:
@@ -387,7 +388,7 @@ export abstract class SpineBase<
                         tempRgb[2] = light[2] * slot.color.b * attColor.b;
                         slot.currentMesh.tint = new PixiColor(tempRgb).toNumber();
                     }
-                    slot.currentMesh.blendMode = slot.blendMode;
+                    slot.currentMesh.blendMode = blendModeMap[slot.blendMode] || 'normal';
                     if (!slot.hackRegion) {
                         this.setMeshRegion(attachment as IMeshAttachment, slot.currentMesh, region);
                     }
