@@ -320,8 +320,8 @@ export async function readSpineSpineData(config: any): Promise<any> {
 
             if (isP === undefined || isP === null || isP === 3) {
                 const detectedP = isPremultiplied(this.texture[0]);
-                mode = detectedP ? 'premultiplied-alpha' : 'no-premultiply-alpha';
-                this.isPremultiplied = detectedP;
+                mode = detectedP ? 'premultiplied-alpha' : 'premultiply-alpha-on-upload';
+                this.isPremultiplied = true;
                 this.textureMode = 3;
             } else if (isP === 1) {
                 mode = 'premultiply-alpha-on-upload';

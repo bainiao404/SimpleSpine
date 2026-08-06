@@ -1,6 +1,6 @@
 /*!
  * simple-pixi-spine - v4.0.4
- * Compiled Wed, 05 Aug 2026 16:54:57 UTC
+ * Compiled Thu, 06 Aug 2026 09:30:22 UTC
  *
  * Integrated spine-pixi runtime with SimplePixiSpine wrapper.
  * All rights reserved.
@@ -51724,8 +51724,8 @@ async function readSpineSpineData(config) {
       let mode;
       if (isP === void 0 || isP === null || isP === 3) {
         const detectedP = isPremultiplied(this.texture[0]);
-        mode = detectedP ? "premultiplied-alpha" : "no-premultiply-alpha";
-        this.isPremultiplied = detectedP;
+        mode = detectedP ? "premultiplied-alpha" : "premultiply-alpha-on-upload";
+        this.isPremultiplied = true;
         this.textureMode = 3;
       } else if (isP === 1) {
         mode = "premultiply-alpha-on-upload";
